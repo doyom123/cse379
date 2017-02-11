@@ -1,0 +1,52 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000                 AREA             LAB2, CODE, READWRITE
+    2 00000000                 EXPORT           div_and_mod
+    3 00000000         
+    4 00000000         div_and_mod
+    5 00000000 E92D5FFC        STMFD            r13!, {r2-r12, r14}
+    6 00000004         
+    7 00000004         ; Your code for the signed division/mod routine goes her
+                       e.  
+    8 00000004         ; The dividend is passed in r0 and the divisor in r1.
+    9 00000004         ; The quotient is returned in r0 and the remainder in r1
+                       . 
+   10 00000004         
+   11 00000004 E8BD5FFC        LDMFD            r13!, {r2-r12, r14}
+   12 00000008 E12FFF1E        BX               lr          ; Return to the C p
+                                                            rogram 
+   13 0000000C         
+   14 0000000C         
+   15 0000000C                 END
+Command Line: --debug --xref --diag_suppress=9931 --apcs=interwork --depend=.\o
+bjects\lab2.d -o.\objects\lab2.o -IC:\Keil_v5\ARM\RV31\INC -IC:\Keil_v5\ARM\CMS
+IS\Include -IC:\Keil_v5\ARM\Inc\Philips --predefine="__EVAL SETA 1" --predefine
+="__UVISION_VERSION SETA 522" --list=.\listings\lab2.lst lab2.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+LAB2 00000000
+
+Symbol: LAB2
+   Definitions
+      At line 1 in file lab2.s
+   Uses
+      None
+Comment: LAB2 unused
+div_and_mod 00000000
+
+Symbol: div_and_mod
+   Definitions
+      At line 4 in file lab2.s
+   Uses
+      At line 2 in file lab2.s
+Comment: div_and_mod used once
+2 symbols
+334 symbols in table
