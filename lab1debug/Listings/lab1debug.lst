@@ -49,9 +49,10 @@ ARM Macro Assembler    Page 1
    30 0000003C                 END
               00020026 
 Command Line: --debug --xref --diag_suppress=9931 --apcs=interwork --depend=.\o
-bjects\4.d -o.\objects\4.o -IC:\Keil_v5\ARM\RV31\INC -IC:\Keil_v5\ARM\CMSIS\Inc
-lude -IC:\Keil_v5\ARM\Inc\Philips --predefine="__EVAL SETA 1" --predefine="__UV
-ISION_VERSION SETA 522" --list=.\listings\4.lst 4.s
+bjects\lab1debug.d -o.\objects\lab1debug.o -IC:\Keil_v5\ARM\RV31\INC -IC:\Keil_
+v5\ARM\CMSIS\Include -IC:\Keil_v5\ARM\Inc\Philips --predefine="__EVAL SETA 1" -
+-predefine="__UVISION_VERSION SETA 522" --list=.\listings\lab1debug.lst lab1deb
+ug.s
 
 
 
@@ -62,23 +63,23 @@ LOOP 00000008
 
 Symbol: LOOP
    Definitions
-      At line 11 in file 4.s
+      At line 11 in file lab1debug.s
    Uses
-      At line 22 in file 4.s
+      At line 22 in file lab1debug.s
 Comment: LOOP used once
 MULT 00000014
 
 Symbol: MULT
    Definitions
-      At line 16 in file 4.s
+      At line 16 in file lab1debug.s
    Uses
-      At line 19 in file 4.s
+      At line 19 in file lab1debug.s
 Comment: MULT used once
 STOP 00000030
 
 Symbol: STOP
    Definitions
-      At line 26 in file 4.s
+      At line 26 in file lab1debug.s
    Uses
       None
 Comment: STOP unused
@@ -86,7 +87,7 @@ SquareTest 00000000
 
 Symbol: SquareTest
    Definitions
-      At line 1 in file 4.s
+      At line 1 in file lab1debug.s
    Uses
       None
 Comment: SquareTest unused
@@ -94,7 +95,7 @@ main 00000000
 
 Symbol: main
    Definitions
-      At line 5 in file 4.s
+      At line 5 in file lab1debug.s
    Uses
       None
 Comment: main unused
