@@ -37,7 +37,7 @@ ARM Macro Assembler    Page 1
    29 00000018         
    30 00000018         ; check sign of divisor
    31 00000018 E3510000        CMP              r1, #0
-   32 0000001C E3A05000        MOV              r5, #0
+   32 0000001C E3A06000        MOV              r6, #0
    33 00000020 43A06001        MOVMI            r6, #1
    34 00000024         ; if divisor < 0, convert to two's comp
    35 00000024 41E01001        MVNMI            r1, r1

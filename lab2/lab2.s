@@ -29,7 +29,7 @@ div_and_mod
 	
 	; check sign of divisor
 	CMP 	r1, #0
-	MOV 	r5, #0
+	MOV 	r6, #0
 	MOVMI 	r6, #1
 	; if divisor < 0, convert to two's comp
 	MVNMI 	r1, r1
