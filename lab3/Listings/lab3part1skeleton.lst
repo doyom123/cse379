@@ -1,0 +1,127 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000                 AREA             lib, CODE, READWRITE
+    2 00000000                 EXPORT           lab3
+    3 00000000                 EXPORT           pin_connect_block_setup_for_uar
+t0
+    4 00000000         
+    5 00000000 00000014 
+                       U0LSR   EQU              0x14        ; UART0 Line Status
+                                                             Register
+    6 00000000         
+    7 00000000         lab3
+    8 00000000 E92D4000        STMFD            SP!,{lr}    ; Store register lr
+                                                             on stack
+    9 00000004         
+   10 00000004         ; Your code is placed here
+   11 00000004         ; UART0 
+   12 00000004         ; Read Data
+   13 00000004 E59F0040        LDR              r0, =0xE000C000
+   14 00000008 E5D01014        LDRB             r1, [r0, #U0LSR]
+   15 0000000C         
+   16 0000000C         rstart
+   17 0000000C         ; Test RDR in Status Register
+   18 0000000C E2112001        ANDS             r2, r1, #1
+   19 00000010         ; if RDR == 0 -> rstart
+   20 00000010 0AFFFFFD        BEQ              rstart
+   21 00000014         ; else Read byte from receive register
+   22 00000014 C5D03000        LDRBGT           r3, [r0]
+   23 00000018         
+   24 00000018         ; Transmit Data
+   25 00000018         tstart
+   26 00000018         ; test THRE in Status Register
+   27 00000018 E2112020        ANDS             r2, r1, #32
+   28 0000001C         ; if THRE == 0 -> tstart
+   29 0000001C 0AFFFFFD        BEQ              tstart
+   30 00000020         ; else Store byte in transmit register
+   31 00000020 C5C03000        STRBGT           r3, [r0]
+   32 00000024         
+   33 00000024 E8BD4000        LDMFD            sp!, {lr}
+   34 00000028 E12FFF1E        BX               lr
+   35 0000002C         
+   36 0000002C         
+   37 0000002C         pin_connect_block_setup_for_uart0
+   38 0000002C E92D4003        STMFD            sp!, {r0, r1, lr}
+   39 00000030 E59F0018        LDR              r0, =0xE002C000 ; PINSEL0
+   40 00000034 E5901000        LDR              r1, [r0]
+   41 00000038 E3811005        ORR              r1, r1, #5
+   42 0000003C E3C1100A        BIC              r1, r1, #0xA
+   43 00000040 E5801000        STR              r1, [r0]
+   44 00000044 E8BD4003        LDMFD            sp!, {r0, r1, lr}
+   45 00000048 E12FFF1E        BX               lr
+   46 0000004C         
+   47 0000004C                 END
+              E000C000 
+              E002C000 
+Command Line: --debug --xref --diag_suppress=9931 --apcs=interwork --depend=.\o
+bjects\lab3part1skeleton.d -o.\objects\lab3part1skeleton.o -IC:\Keil_v5\ARM\RV3
+1\INC -IC:\Keil_v5\ARM\CMSIS\Include -IC:\Keil_v5\ARM\Inc\Philips --predefine="
+__EVAL SETA 1" --predefine="__UVISION_VERSION SETA 522" --list=.\listings\lab3p
+art1skeleton.lst lab3part1skeleton.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+lab3 00000000
+
+Symbol: lab3
+   Definitions
+      At line 7 in file lab3part1skeleton.s
+   Uses
+      At line 2 in file lab3part1skeleton.s
+Comment: lab3 used once
+lib 00000000
+
+Symbol: lib
+   Definitions
+      At line 1 in file lab3part1skeleton.s
+   Uses
+      None
+Comment: lib unused
+pin_connect_block_setup_for_uart0 0000002C
+
+Symbol: pin_connect_block_setup_for_uart0
+   Definitions
+      At line 37 in file lab3part1skeleton.s
+   Uses
+      At line 3 in file lab3part1skeleton.s
+Comment: pin_connect_block_setup_for_uart0 used once
+rstart 0000000C
+
+Symbol: rstart
+   Definitions
+      At line 16 in file lab3part1skeleton.s
+   Uses
+      At line 20 in file lab3part1skeleton.s
+Comment: rstart used once
+tstart 00000018
+
+Symbol: tstart
+   Definitions
+      At line 25 in file lab3part1skeleton.s
+   Uses
+      At line 29 in file lab3part1skeleton.s
+Comment: tstart used once
+5 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Absolute symbols
+
+U0LSR 00000014
+
+Symbol: U0LSR
+   Definitions
+      At line 5 in file lab3part1skeleton.s
+   Uses
+      At line 14 in file lab3part1skeleton.s
+Comment: U0LSR used once
+1 symbol
+340 symbols in table
