@@ -15,9 +15,9 @@ lab3
 	LDMFD sp!, {lr}
 	BX lr
 
-read_character
+read_character		; Read Data
 	STMFD SP!,{lr}	; Store register lr on stack
-	; Read Data
+	
 	LDR r0, =0xE000C000
 	LDRB r1, [r0, #U0LSR]
 rstart
@@ -31,12 +31,12 @@ rstart
 	LDMFD sp!, {lr}
 	BX lr
 
-output_character
-    ; Transmit Data
+output_character    ; Transmit Data
 	STMFD SP!,{lr}	; Store register lr on stack	
-tstart
+
 	LDR r0, =0xE000C000
 	LDRB r1, [r0, #U0LSR]
+tstart
 	; test THRE in Status Register
 	ANDS 	r2, r1, #32
 	; if THRE == 0 -> tstart
