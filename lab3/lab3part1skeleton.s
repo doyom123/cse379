@@ -11,8 +11,15 @@ lab3
 	; UART0 
 	LDR r0, =0xE000C000
 	LDRB r1, [r0, #U0LSR]
-	
+
+	LDMFD sp!, {lr}
+	BX lr
+
+read_character
+	STMFD SP!,{lr}	; Store register lr on stack
 	; Read Data
+	LDR r0, =0xE000C000
+	LDRB r1, [r0, #U0LSR]
 rstart
 	; Test RDR in Status Register
 	ANDS	r2, r1, #1
@@ -21,14 +28,21 @@ rstart
 	; else Read byte from receive register
 	LDRBGT	r3, [r0]
 
-	; Transmit Data
+	LDMFD sp!, {lr}
+	BX lr
+
+output_character
+    ; Transmit Data
+	STMFD SP!,{lr}	; Store register lr on stack	
 tstart
+	LDR r0, =0xE000C000
+	LDRB r1, [r0, #U0LSR]
 	; test THRE in Status Register
 	ANDS 	r2, r1, #32
 	; if THRE == 0 -> tstart
 	BEQ 	tstart
 	; else Store byte in transmit register
-	STRBGT	r3, [r]
+	STRBGT	r3, [r0]
 	
 	LDMFD sp!, {lr}
 	BX lr
