@@ -1,17 +1,15 @@
 	AREA	lib, CODE, READWRITE	
 	EXPORT lab3
 	EXPORT pin_connect_block_setup_for_uart0
+	EXPORT read_character
+	EXPORT output_character
 	
 U0LSR EQU 0x14			; UART0 Line Status Register
 
 lab3
 	STMFD SP!,{lr}	; Store register lr on stack
-    
-; Your code is placed here
-	; UART0 
-	LDR r0, =0xE000C000
-	LDRB r1, [r0, #U0LSR]
-
+    BL read_character;
+	BL output_character;
 	LDMFD sp!, {lr}
 	BX lr
 

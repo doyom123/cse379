@@ -1,5 +1,7 @@
 extern int lab3(void);	
 extern int pin_connect_block_setup_for_uart0(void);
+extern int read_character(void);
+extern int output_character(void);
 
 void serial_init(void)
 {
@@ -22,4 +24,7 @@ int main()
    pin_connect_block_setup_for_uart0();
    serial_init();
    lab3();
+   //read_character();
+		//output_character();
+	 
 }
