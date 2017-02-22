@@ -21,5 +21,6 @@ int main()
 { 	
    pin_connect_block_setup_for_uart0();
    serial_init();
+
    lab3();
 }

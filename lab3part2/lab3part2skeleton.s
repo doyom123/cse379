@@ -21,8 +21,7 @@ prompt = "Enter a number:  ",0
 lab3
 	STMFD SP!,{lr}	; Store register lr on stack
 
-	BL	output_string
-    BL read_character
+	BL read_character
 	BL output_character
 	LDMFD sp!, {lr}
 	BX lr
@@ -31,9 +30,11 @@ read_string				; base address of string passed into r4
 	STMFD SP!, {lr} 	; Store register lr on stack
 rs_loop
 	BL 		read_character 	
-	STRB 	r0, [r4], #1 		; store char into [r4]
-	CMP 	r0, #0				; check if char is 0
-	BNE 	rs_loop				; loop if char != 0
+	STRB 	r0, [r4], #1 		; store char into [r4], increment index
+	CMP 	r0, #0x0A			; check if char LF
+	BNE 	rs_loop				; loop if char != LF
+	MOV 	r5, #0 			
+	STRB	r5, [r4] 			; append NULL char
 	
 	LDMFD sp!, {lr}
 	BX lr
@@ -53,10 +54,10 @@ os_loop
 read_character					; Read Data
 	STMFD 	SP!,{lr}			; Store register lr on stack
 	LDR 	r0, =0xE000C000		; Load UART0 Base Address
-	LDRB 	r1, [r0, #U0LSR]	; Load Status Register Addresss
 rstart
-	LDRB	r4, [r1]		; Load Status Register into r4
-	ANDS	r2, r4, #1  	; Test RDR in Status Register
+	LDRB 	r1, [r0, #U0LSR]	; Load Status Register Addresss
+	;LDRB	r4, [r1]		; Load Status Register into r4
+	ANDS	r2, r1, #1  	; Test RDR in Status Register
 	BEQ		rstart 		 	; if RDR == 0 -> rstart
 	LDRB	r3, [r0]  		; else Read byte from receive register
 	MOV 	r0, r3			; Return char in r0
@@ -67,10 +68,10 @@ output_character    			; char passed in through r0
 	STMFD 	SP!,{lr}  			; Store register lr on stack
 	MOV		r3, r0				; Store char argument into r3
 	LDR 	r0, =0xE000C000  	; Load UART0 Base Address
-	LDRB 	r1, [r0, #U0LSR]	; Load Status Register Addresss
 tstart
-	LDRB	r4, [r1]  		; Load Status Register into r4
-	ANDS 	r2, r4, #32  	; test THRE in Status Register
+	LDRB 	r1, [r0, #U0LSR]	; Load Status Register Addresss
+	;LDRB	r4, [r1]  		; Load Status Register into r4
+	ANDS 	r2, r1, #32  	; test THRE in Status Register
 	BEQ 	tstart  		; if THRE == 0 -> tstart
 	STRB	r3, [r0]  		; else Store byte in transmit register
 	LDMFD sp!, {lr}
