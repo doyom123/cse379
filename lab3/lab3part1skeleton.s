@@ -19,8 +19,10 @@ read_character		; Read Data
 	LDR r0, =0xE000C000
 	LDRB r1, [r0, #U0LSR]
 rstart
+	; Load Status Register into r4
+	LDRB	r4, [r1]
 	; Test RDR in Status Register
-	ANDS	r2, r1, #1
+	ANDS	r2, r4, #1
 	; if RDR == 0 -> rstart
 	BEQ		rstart
 	; else Read byte from receive register
@@ -35,8 +37,10 @@ output_character    ; Transmit Data
 	LDR r0, =0xE000C000
 	LDRB r1, [r0, #U0LSR]
 tstart
+	; Load Status Register into r4
+	LDRB	r4, [r1]
 	; test THRE in Status Register
-	ANDS 	r2, r1, #32
+	ANDS 	r2, r4, #32
 	; if THRE == 0 -> tstart
 	BEQ 	tstart
 	; else Store byte in transmit register
