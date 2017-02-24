@@ -4,37 +4,43 @@
 	
 
 U0LSR EQU 0x14			; UART0 Line Status Register
-
+U0LCR EQU 0x0C 			; UART0 Line Control Register
+U0BA EQU 0xE000C000		; UART0 Base Address
 		; You'll want to define more constants to make your code easier 
 		; to read and debug
 	   
 		; Memory allocated for user-entered strings
-
+buff = "user-entered string", 0 	; memory for user entered string
 prompt = "Enter a number:  ",0          
 
 		; Additional strings may be defined here
-
+prompt_divisor = "Enter a divisor: ", 0
+prompt_dividen = "Enter a dividend: ", 0
+response_quotient = "Quotient = ", 0
+response_remainder = "Remainder = ", 0
 	ALIGN
 
 
 
 lab3
 	STMFD SP!,{lr}	; Store register lr on stack
-
-	BL read_character
-	BL output_character
+	;LDR 	r4, =buff
+	;BL 		read_string
+	LDR 	r4, =buff
+	BL 		output_string
 	LDMFD sp!, {lr}
 	BX lr
 
 read_string				; base address of string passed into r4
 	STMFD SP!, {lr} 	; Store register lr on stack
 rs_loop
-	BL 		read_character 	
+	BL 		read_character
 	STRB 	r0, [r4], #1 		; store char into [r4], increment index
-	CMP 	r0, #0x0A			; check if char LF
-	BNE 	rs_loop				; loop if char != LF
+	 	
+	CMP 	r0, #0x0D			; check if char CR
+	BNE 	rs_loop				; loop if char != CR
 	MOV 	r5, #0 			
-	STRB	r5, [r4] 			; append NULL char
+	STRB	r5, [r4, #-1]! 		; decrement buff index, then append NULL char
 	
 	LDMFD sp!, {lr}
 	BX lr
@@ -43,6 +49,8 @@ output_string 			; base address of string passed into r4
 	STMFD 	SP!, {lr}
 os_loop
 	LDRB	r0, [r4], #1		; char loaded into r0, r4 post-indexed base updated 
+	LDR 	r1, =U0BA 			; set r1 to UART0 Base Address
+	;STRB 	r0, [r1] 			; Store byte into UART0 Base Address
 	BL 		output_character	; output char in r0 
 	CMP 	r0, #0				; check if char is 0
 	BNE		os_loop				; loop if char != 0
