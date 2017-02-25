@@ -24,182 +24,404 @@ t0
    10 00000000         ; to read and debug
    11 00000000         
    12 00000000         ; Memory allocated for user-entered strings
-   13 00000000 75 73 65 
-              72 2D 65 
-              6E 74 65 
-              72 65 64 
-              20 73 74 
-              72 69 6E 
-              67 00    buff    =                "user-entered string", 0 ; memo
-                                                            ry for user entered
-                                                             string
-   14 00000014 45 6E 74 
+   13 00000000 45 6E 74 
               65 72 20 
               61 20 6E 
               75 6D 62 
               65 72 3A 
               20 20 00 prompt  =                "Enter a number:  ",0
-   15 00000026         
-   16 00000026         ; Additional strings may be defined here
-   17 00000026 45 6E 74 
+   14 00000012         ; Additional strings may be defined here
+   15 00000012 45 6E 74 
               65 72 20 
               61 20 64 
               69 76 69 
               73 6F 72 
               3A 20 00 prompt_divisor
                                =                "Enter a divisor: ", 0
-   18 00000038 45 6E 74 
+   16 00000024 45 6E 74 
               65 72 20 
               61 20 64 
               69 76 69 
               64 65 6E 
               64 3A 20 
-              00       prompt_dividen
+              00       prompt_dividend
                                =                "Enter a dividend: ", 0
-   19 0000004B 51 75 6F 
+   17 00000037 51 75 6F 
               74 69 65 
               6E 74 20 
               3D 20 00 response_quotient
                                =                "Quotient = ", 0
-   20 00000057 52 65 6D 
+   18 00000043 52 65 6D 
               61 69 6E 
+              64 65 72 
+              20 3D 20 
+              00       response_remainder
+                               =                "Remainder = ", 0
+   19 00000050                 ALIGN
+   20 00000050         
+   21 00000050         lab3
+   22 00000050 E92D4000        STMFD            SP!,{lr}    ; Store register lr
+                                                             on stack
+   23 00000054         
 
 
 
 ARM Macro Assembler    Page 2 
 
 
-              64 65 72 
-              20 3D 20 
-              00       response_remainder
-                               =                "Remainder = ", 0
-   21 00000064                 ALIGN
-   22 00000064         
-   23 00000064         
-   24 00000064         
-   25 00000064         lab3
-   26 00000064 E92D4000        STMFD            SP!,{lr}    ; Store register lr
-                                                             on stack
-   27 00000068         ;LDR  r4, =buff
-   28 00000068         ;BL   read_string
-   29 00000068 E59F40B4        LDR              r4, =buff
-   30 0000006C EB00000A        BL               output_string
-   31 00000070 E8BD4000        LDMFD            sp!, {lr}
-   32 00000074 E12FFF1E        BX               lr
-   33 00000078         
-   34 00000078         read_string                          ; base address of s
-                                                            tring passed into r
-                                                            4
-   35 00000078 E92D4000        STMFD            SP!, {lr}   ; Store register lr
-                                                             on stack
-   36 0000007C         rs_loop
-   37 0000007C EB00000E        BL               read_character
-   38 00000080 E4C40001        STRB             r0, [r4], #1 ; store char into 
-                                                            [r4], increment ind
-                                                            ex
-   39 00000084         
-   40 00000084 E350000D        CMP              r0, #0x0D   ; check if char CR
-   41 00000088 1AFFFFFB        BNE              rs_loop     ; loop if char != C
-                                                            R
-   42 0000008C E3A05000        MOV              r5, #0
-   43 00000090 E5645001        STRB             r5, [r4, #-1]! ; decrement buff
-                                                             index, then append
-                                                             NULL char
-   44 00000094         
-   45 00000094 E8BD4000        LDMFD            sp!, {lr}
-   46 00000098 E12FFF1E        BX               lr
-   47 0000009C         
-   48 0000009C         output_string                        ; base address of s
-                                                            tring passed into r
-                                                            4
-   49 0000009C E92D4000        STMFD            SP!, {lr}
-   50 000000A0         os_loop
-   51 000000A0 E4D40001        LDRB             r0, [r4], #1 ; char loaded into
-                                                             r0, r4 post-indexe
-                                                            d base updated 
-   52 000000A4 E59F107C        LDR              r1, =U0BA   ; set r1 to UART0 B
-                                                            ase Address
-   53 000000A8         ;STRB  r0, [r1]    ; Store byte into UART0 Base Address
-   54 000000A8 EB00000C        BL               output_character ; output char 
-                                                            in r0 
-   55 000000AC E3500000        CMP              r0, #0      ; check if char is 
-                                                            0
-   56 000000B0 1AFFFFFA        BNE              os_loop     ; loop if char != 0
-                                                            
-   57 000000B4         
-   58 000000B4 E8BD4000        LDMFD            sp!, {lr}
+   24 00000054         ; Enter Dividend
+   25 00000054 E59F4274        LDR              r4, =prompt_dividend
+   26 00000058 EB00002E        BL               output_string ; print dividend 
+                                                            prompt
+   27 0000005C E59F426C        LDR              r4, =prompt_dividend
+   28 00000060 EB000020        BL               read_string ; read user input
+   29 00000064 EB00002B        BL               output_string 
+                                                            ; print user input
+   30 00000068         
+   31 00000068 E3A0000A        MOV              r0, #0x0A   ; print LF
+   32 0000006C EB00003A        BL               output_character
+   33 00000070         
+   34 00000070         ; Enter Divisor
+   35 00000070 E59F425C        LDR              r4, =prompt_divisor
+   36 00000074 EB000027        BL               output_string ; print divisor p
+                                                            rompt
+   37 00000078 E59F4254        LDR              r4, =prompt_divisor
+   38 0000007C EB000019        BL               read_string ; read user input 
+   39 00000080 EB000024        BL               output_string 
+                                                            ; print user input
+   40 00000084         
+   41 00000084 E3A0000A        MOV              r0, #0x0A   ; print LF
+   42 00000088 EB000033        BL               output_character
+   43 0000008C         
+   44 0000008C         ; Convert ASCII to int
+   45 0000008C E59F423C        LDR              r4, =prompt_dividend
+   46 00000090 EB00003B        BL               atoi
+   47 00000094 E1A02000        MOV              r2, r0      ; save dividend_int
+                                                             in r2
+   48 00000098 E59F4234        LDR              r4, =prompt_divisor
+   49 0000009C EB000038        BL               atoi
+   50 000000A0 E1A01000        MOV              r1, r0      ; move divisor_int 
+                                                            in r1
+   51 000000A4 E1A00002        MOV              r0, r2      ; move dividend_int
+                                                             in r0
+   52 000000A8         
+   53 000000A8         ; Perform calculation
+   54 000000A8 EB000061        BL               div_and_mod ; Return: r0 = quot
+                                                            ient, r1 = remainde
+                                                            r
+   55 000000AC         
+   56 000000AC         ; Print Quotient
+   57 000000AC E59F4224        LDR              r4, =response_quotient
+   58 000000B0 EB000018        BL               output_string
+   59 000000B4 E59F4220        LDR              r4, =prompt ; convert quotient 
+                                                            int to ASCII
+   60 000000B8 EB000044        BL               itoa
+   61 000000BC EB000015        BL               output_string
+   62 000000C0         
+   63 000000C0 E3A0000A        MOV              r0, #0x0A   ; print LF
+   64 000000C4 EB000024        BL               output_character
+   65 000000C8         
+   66 000000C8         ; Print Remainder
+   67 000000C8 E59F4210        LDR              r4, =response_remainder
+   68 000000CC EB000011        BL               output_string
+   69 000000D0 E59F4204        LDR              r4, =prompt
+   70 000000D4 E1A00001        MOV              r0, r1
+   71 000000D8 EB00003C        BL               itoa
+   72 000000DC EB00000D        BL               output_string
 
 
 
 ARM Macro Assembler    Page 3 
 
 
-   59 000000B8 E12FFF1E        BX               lr
-   60 000000BC         
-   61 000000BC         
-   62 000000BC         read_character                       ; Read Data
-   63 000000BC E92D4000        STMFD            SP!,{lr}    ; Store register lr
+   73 000000E0         
+   74 000000E0 E8BD4000        LDMFD            sp!, {lr}
+   75 000000E4 E12FFF1E        BX               lr
+   76 000000E8         
+   77 000000E8         read_string                          ; base address of s
+                                                            tring passed into r
+                                                            4
+   78 000000E8 E92D4010        STMFD            SP!, {lr, r4} ; Store register 
+                                                            lr on stack
+   79 000000EC         rs_loop
+   80 000000EC EB000011        BL               read_character
+   81 000000F0 E4C40001        STRB             r0, [r4], #1 ; store char into 
+                                                            [r4], increment ind
+                                                            ex
+   82 000000F4 EB000018        BL               output_character
+   83 000000F8 E350000D        CMP              r0, #0x0D   ; check if char CR
+   84 000000FC 1AFFFFFA        BNE              rs_loop     ; loop if char != C
+                                                            R
+   85 00000100 E3A05000        MOV              r5, #0
+   86 00000104 E5645001        STRB             r5, [r4, #-1]! ; decrement buff
+                                                             index, then append
+                                                             NULL char
+   87 00000108         
+   88 00000108 E3A0000A        MOV              r0, #0x0A   ; print new line
+   89 0000010C EB000012        BL               output_character ; 
+   90 00000110         
+   91 00000110 E8BD4010        LDMFD            sp!, {lr, r4}
+   92 00000114 E12FFF1E        BX               lr
+   93 00000118         
+   94 00000118         output_string                        ; base address of s
+                                                            tring passed into r
+                                                            4
+   95 00000118 E92D401F        STMFD            SP!, {lr, r0-r4}
+   96 0000011C         os_loop
+   97 0000011C E4D40001        LDRB             r0, [r4], #1 ; char loaded into
+                                                             r0, r4 post-indexe
+                                                            d base updated 
+   98 00000120 E59F11BC        LDR              r1, =U0BA   ; set r1 to UART0 B
+                                                            ase Address
+   99 00000124 EB00000C        BL               output_character ; output char 
+                                                            in r0 
+  100 00000128 E3500000        CMP              r0, #0      ; check if char is 
+                                                            0
+  101 0000012C 1AFFFFFA        BNE              os_loop     ; loop if char != 0
+                                                            
+  102 00000130         
+  103 00000130 E8BD401F        LDMFD            sp!, {lr, r0-r4}
+  104 00000134 E12FFF1E        BX               lr
+  105 00000138         
+  106 00000138         
+  107 00000138         read_character                       ; Read Data
+  108 00000138 E92D4000        STMFD            SP!,{lr}    ; Store register lr
                                                              on stack
-   64 000000C0 E59F0060        LDR              r0, =0xE000C000 ; Load UART0 Ba
+  109 0000013C E59F01A0        LDR              r0, =0xE000C000 ; Load UART0 Ba
                                                             se Address
-   65 000000C4         rstart
-   66 000000C4 E5D01014        LDRB             r1, [r0, #U0LSR] ; Load Status 
+  110 00000140         rstart
+  111 00000140 E5D01014        LDRB             r1, [r0, #U0LSR] ; Load Status 
                                                             Register Addresss
-   67 000000C8         ;LDRB r4, [r1]  ; Load Status Register into r4
-   68 000000C8 E2112001        ANDS             r2, r1, #1  ; Test RDR in Statu
-                                                            s Register
-   69 000000CC 0AFFFFFC        BEQ              rstart      ; if RDR == 0 -> rs
-                                                            tart
-   70 000000D0 E5D03000        LDRB             r3, [r0]    ; else Read byte fr
-                                                            om receive register
-                                                            
-   71 000000D4 E1A00003        MOV              r0, r3      ; Return char in r0
-                                                            
-   72 000000D8 E8BD4000        LDMFD            sp!, {lr}
-   73 000000DC E12FFF1E        BX               lr
-   74 000000E0         
-   75 000000E0         output_character                     ; char passed in th
-                                                            rough r0
-   76 000000E0 E92D4000        STMFD            SP!,{lr}    ; Store register lr
-                                                             on stack
-   77 000000E4 E1A03000        MOV              r3, r0      ; Store char argume
-                                                            nt into r3
-   78 000000E8 E59F0038        LDR              r0, =0xE000C000 ; Load UART0 Ba
-                                                            se Address
-   79 000000EC         tstart
-   80 000000EC E5D01014        LDRB             r1, [r0, #U0LSR] ; Load Status 
-                                                            Register Addresss
-   81 000000F0         ;LDRB r4, [r1]    ; Load Status Register into r4
-   82 000000F0 E2112020        ANDS             r2, r1, #32 ; test THRE in Stat
-                                                            us Register
-   83 000000F4 0AFFFFFC        BEQ              tstart      ; if THRE == 0 -> t
-                                                            start
-   84 000000F8 E5C03000        STRB             r3, [r0]    ; else Store byte i
-                                                            n transmit register
-                                                            
-   85 000000FC E8BD4000        LDMFD            sp!, {lr}
-   86 00000100 E12FFF1E        BX               lr
-   87 00000104         
-   88 00000104         
-   89 00000104         pin_connect_block_setup_for_uart0
-   90 00000104 E92D4003        STMFD            sp!, {r0, r1, lr}
-   91 00000108 E59F001C        LDR              r0, =0xE002C000 ; PINSEL0
-   92 0000010C E5901000        LDR              r1, [r0]
-   93 00000110 E3811005        ORR              r1, r1, #5
-   94 00000114 E3C1100A        BIC              r1, r1, #0xA
-   95 00000118 E5801000        STR              r1, [r0]
-   96 0000011C E8BD4003        LDMFD            sp!, {r0, r1, lr}
-   97 00000120 E12FFF1E        BX               lr
-   98 00000124         
-   99 00000124         
-  100 00000124         
+  112 00000144 E2112001        ANDS             r2, r1, #1  ; Test RDR in Statu
 
 
 
 ARM Macro Assembler    Page 4 
 
 
-  101 00000124                 END
+                                                            s Register
+  113 00000148 0AFFFFFC        BEQ              rstart      ; if RDR == 0 -> rs
+                                                            tart
+  114 0000014C E5D03000        LDRB             r3, [r0]    ; else Read byte fr
+                                                            om receive register
+                                                            
+  115 00000150 E1A00003        MOV              r0, r3      ; Return char in r0
+                                                            
+  116 00000154 E8BD4000        LDMFD            sp!, {lr}
+  117 00000158 E12FFF1E        BX               lr
+  118 0000015C         
+  119 0000015C         output_character                     ; char passed in th
+                                                            rough r0
+  120 0000015C E92D400E        STMFD            SP!,{lr, r1-r3} ; Store registe
+                                                            r lr on stack
+  121 00000160         
+  122 00000160 E1A03000        MOV              r3, r0      ; Store char argume
+                                                            nt into r3
+  123 00000164 E59F0178        LDR              r0, =0xE000C000 ; Load UART0 Ba
+                                                            se Address
+  124 00000168         tstart
+  125 00000168 E5D01014        LDRB             r1, [r0, #U0LSR] ; Load Status 
+                                                            Register Addresss
+  126 0000016C E2112020        ANDS             r2, r1, #32 ; test THRE in Stat
+                                                            us Register
+  127 00000170 0AFFFFFC        BEQ              tstart      ; if THRE == 0 -> t
+                                                            start
+  128 00000174 E5C03000        STRB             r3, [r0]    ; else Store byte i
+                                                            n transmit register
+                                                            
+  129 00000178 E1A00003        MOV              r0, r3
+  130 0000017C E8BD400E        LDMFD            sp!, {lr, r1-r3}
+  131 00000180 E12FFF1E        BX               lr
+  132 00000184         
+  133 00000184         atoi
+  134 00000184         ; Args r4 = base address of char
+  135 00000184         ; r5 = sign bit, 1 if neg, 0 if pos
+  136 00000184         ; r2 = total
+  137 00000184         ; r3 = 10
+  138 00000184         
+  139 00000184         ; Return r0
+  140 00000184 E92D401C        STMFD            SP!, {lr, r2-r4}
+  141 00000188 E3A02000        MOV              r2, #0
+  142 0000018C E3A0300A        MOV              r3, #10
+  143 00000190         ; Check sign
+  144 00000190 E3A05000        MOV              r5, #0
+  145 00000194 E4D40001        LDRB             r0, [r4], #1 ; Load sign bit
+  146 00000198 E350002D        CMP              r0, #0x2D
+  147 0000019C 03A05001        MOVEQ            r5, #1      ; Set r5 = 0 if neg
+                                                            ative
+  148 000001A0         atoi_loop
+  149 000001A0 E4D40001        LDRB             r0, [r4], #1 ; Load char
+  150 000001A4 E3500000        CMP              r0, #0
+  151 000001A8 0A000002        BEQ              atoi_end    ; Branch to end of 
+                                                            subroutine if NULL 
+                                                            char
+  152 000001AC E2400030        SUB              r0, r0, #48 ; Conver to int
+  153 000001B0 E0220293        MLA              r2, r3, r2, r0
+  154 000001B4 EAFFFFF9        B                atoi_loop
+
+
+
+ARM Macro Assembler    Page 5 
+
+
+  155 000001B8         atoi_end
+  156 000001B8 E3550001        CMP              r5, #1      ; Convert to two's 
+                                                            comp if negative
+  157 000001BC 01E02002        MVNEQ            r2, r2
+  158 000001C0 02822001        ADDEQ            r2, r2, #1
+  159 000001C4 E1A00002        MOV              r0, r2      ; Return in r0
+  160 000001C8 E8BD401C        LDMFD            sp!, {lr, r2-r4}
+  161 000001CC E12FFF1E        BX               lr
+  162 000001D0         
+  163 000001D0         itoa
+  164 000001D0         ; Args r4 = base address to store result string
+  165 000001D0         ;     r0 = int to convert
+  166 000001D0         ; r2 = divisor 10
+  167 000001D0         ; r3 = counter
+  168 000001D0 E92D401E        STMFD            SP!, {lr, r1-r4}
+  169 000001D4 E3A03000        MOV              r3, #0
+  170 000001D8 E3A0100A        MOV              r1, #10
+  171 000001DC         ; Check sign
+  172 000001DC E3500000        CMP              r0, #0
+  173 000001E0 E3A0502D        MOV              r5, #0x2D   ; '-' char
+  174 000001E4 44C45001        STRBMI           r5, [r4], #1 ; if negative, ins
+                                                            ert '-' char
+  175 000001E8 41E00000        MVNMI            r0, r0      ; if negative, conv
+                                                            ert to two's comp
+  176 000001EC 42800001        ADDMI            r0, r0, #1
+  177 000001F0         itoa_loop
+  178 000001F0 EB00000F        BL               div_and_mod
+  179 000001F4 E3510000        CMP              r1, #0      ; if remainder == 0
+                                                            , branch to end
+  180 000001F8 0A000003        BEQ              itoa_pop
+  181 000001FC E2811030        ADD              r1, r1, #48 ; Convert int to AS
+                                                            CII
+  182 00000200 E52D1004        PUSH             {r1}        ; Push onto stack
+  183 00000204 E2833001        ADD              r3, r3, #1  ; Increment Counter
+                                                            
+  184 00000208 EAFFFFF8        B                itoa_loop
+  185 0000020C         itoa_pop
+  186 0000020C E3530000        CMP              r3, #0      ; Pop from stack un
+                                                            til counter == 0
+  187 00000210 0A000003        BEQ              itoa_end
+  188 00000214 E49D1004        POP              {r1}
+  189 00000218 E4C41001        STRB             r1, [r4], #1 ; Store popped cha
+                                                            r into memory
+  190 0000021C E2433001        SUB              r3, r3, #1
+  191 00000220 EAFFFFF9        B                itoa_pop
+  192 00000224         itoa_end
+  193 00000224 E3A01000        MOV              r1, #0      ; append NULL char
+  194 00000228 E5C41000        STRB             r1, [r4]
+  195 0000022C E8BD401E        LDMFD            sp!, {lr, r1-r4}
+  196 00000230 E12FFF1E        BX               lr
+  197 00000234         
+  198 00000234         div_and_mod
+  199 00000234 E92D5FFC        STMFD            r13!, {r2-r12, r14}
+  200 00000238         
+  201 00000238         ; Your code for the signed division/mod routine goes her
+                       e.  
+  202 00000238         ; The dividend is passed in r0 and the divisor in r1.
+  203 00000238         ; The quotient is returned in r0 and the remainder in r1
+                       . 
+
+
+
+ARM Macro Assembler    Page 6 
+
+
+  204 00000238         
+  205 00000238         ; r0 = dividend
+  206 00000238         ; r1 = divisor
+  207 00000238         ; r2 = counter
+  208 00000238         ; r3 = quotient
+  209 00000238         ; r4 = remainder
+  210 00000238         ; r5 = dividend sign
+  211 00000238         ; r6 = divisor sign
+  212 00000238         ; r7 = r5 XOR r6
+  213 00000238         ; RETURN r0 = quotient
+  214 00000238         ;    r1 = remainder
+  215 00000238         
+  216 00000238         ; check sign of dividend
+  217 00000238 E3500000        CMP              r0, #0
+  218 0000023C E3A05000        MOV              r5, #0
+  219 00000240 43A05001        MOVMI            r5, #1
+  220 00000244         ; if dividend < 0, convert to two's comp
+  221 00000244 41E00000        MVNMI            r0, r0
+  222 00000248 42800001        ADDMI            r0, r0, #1
+  223 0000024C         
+  224 0000024C         ; check sign of divisor
+  225 0000024C E3510000        CMP              r1, #0
+  226 00000250 E3A06000        MOV              r6, #0
+  227 00000254 43A06001        MOVMI            r6, #1
+  228 00000258         ; if divisor < 0, convert to two's comp
+  229 00000258 41E01001        MVNMI            r1, r1
+  230 0000025C 42811001        ADDMI            r1, r1, #1
+  231 00000260         
+  232 00000260 E3A0200F        MOV              r2, #15     ; Init counter to 1
+                                                            5
+  233 00000264 E3A03000        MOV              r3, #0      ; Init quotient to 
+                                                            0
+  234 00000268 E1A01781        LSL              r1, r1, #15 ; lsl divisor by 15
+                                                            
+  235 0000026C E2804000        ADD              r4, r0, #0  ; Set remainder to 
+                                                            dividend
+  236 00000270         loop
+  237 00000270 E0544001        SUBS             r4, r4, r1  ; rem = rem - divis
+                                                            
+  238 00000274         
+  239 00000274         ; if(remainder < 0)
+  240 00000274 B0844001        ADDLT            r4, r4, r1  ; rem = rem + divis
+                                                            
+  241 00000278 B1A03083        LSLLT            r3, #1      ; lsl quotient
+  242 0000027C         ; else
+  243 0000027C A1A03083        LSLGE            r3, #1      ; lsl quotient
+  244 00000280 A3833001        ORRGE            r3, r3, #1  ; set LSB of quot =
+                                                             1
+  245 00000284         
+  246 00000284 E1A010A1        LSR              r1, r1, #1  ; right shift divis
+                                                            
+  247 00000288 E2522001        SUBS             r2, r2, #1  ; decrement counter
+                                                            
+  248 0000028C 5AFFFFF7        BPL              loop        ; branch if count >
+                                                            = 0
+  249 00000290         
+  250 00000290 E2830000        ADD              r0, r3, #0  ; set quot to r0
+  251 00000294 E2841000        ADD              r1, r4, #0  ; set remain to r1
+  252 00000298         
+
+
+
+ARM Macro Assembler    Page 7 
+
+
+  253 00000298 E0257006        EOR              r7, r5, r6
+  254 0000029C E3570001        CMP              r7, #1
+  255 000002A0         ; if dvnd != dvsr, convert answer to two's comp
+  256 000002A0 01E00000        MVNEQ            r0, r0
+  257 000002A4 02800001        ADDEQ            r0, r0, #1
+  258 000002A8         
+  259 000002A8 E8BD5FFC        LDMFD            r13!, {r2-r12, r14}
+  260 000002AC E12FFF1E        BX               lr          ; Return to the C p
+                                                            rogram 
+  261 000002B0         
+  262 000002B0         
+  263 000002B0         pin_connect_block_setup_for_uart0
+  264 000002B0 E92D4003        STMFD            sp!, {r0, r1, lr}
+  265 000002B4 E59F002C        LDR              r0, =0xE002C000 ; PINSEL0
+  266 000002B8 E5901000        LDR              r1, [r0]
+  267 000002BC E3811005        ORR              r1, r1, #5
+  268 000002C0 E3C1100A        BIC              r1, r1, #0xA
+  269 000002C4 E5801000        STR              r1, [r0]
+  270 000002C8 E8BD4003        LDMFD            sp!, {r0, r1, lr}
+  271 000002CC E12FFF1E        BX               lr
+  272 000002D0         
+  273 000002D0         
+  274 000002D0         
+  275 000002D0                 END
+              00000000 
+              00000000 
+              00000000 
+              00000000 
               00000000 
               E000C000 
               E002C000 
@@ -214,19 +436,85 @@ art2skeleton.lst lab3part2skeleton.s
 ARM Macro Assembler    Page 1 Alphabetic symbol ordering
 Relocatable symbols
 
-buff 00000000
+atoi 00000184
 
-Symbol: buff
+Symbol: atoi
    Definitions
-      At line 13 in file lab3part2skeleton.s
+      At line 133 in file lab3part2skeleton.s
    Uses
-      At line 29 in file lab3part2skeleton.s
-Comment: buff used once
-lab3 00000064
+      At line 46 in file lab3part2skeleton.s
+      At line 49 in file lab3part2skeleton.s
+
+atoi_end 000001B8
+
+Symbol: atoi_end
+   Definitions
+      At line 155 in file lab3part2skeleton.s
+   Uses
+      At line 151 in file lab3part2skeleton.s
+Comment: atoi_end used once
+atoi_loop 000001A0
+
+Symbol: atoi_loop
+   Definitions
+      At line 148 in file lab3part2skeleton.s
+   Uses
+      At line 154 in file lab3part2skeleton.s
+Comment: atoi_loop used once
+div_and_mod 00000234
+
+Symbol: div_and_mod
+   Definitions
+      At line 198 in file lab3part2skeleton.s
+   Uses
+      At line 54 in file lab3part2skeleton.s
+      At line 178 in file lab3part2skeleton.s
+
+itoa 000001D0
+
+Symbol: itoa
+   Definitions
+      At line 163 in file lab3part2skeleton.s
+   Uses
+      At line 60 in file lab3part2skeleton.s
+      At line 71 in file lab3part2skeleton.s
+
+itoa_end 00000224
+
+Symbol: itoa_end
+   Definitions
+      At line 192 in file lab3part2skeleton.s
+   Uses
+      At line 187 in file lab3part2skeleton.s
+Comment: itoa_end used once
+itoa_loop 000001F0
+
+Symbol: itoa_loop
+   Definitions
+      At line 177 in file lab3part2skeleton.s
+   Uses
+      At line 184 in file lab3part2skeleton.s
+Comment: itoa_loop used once
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Relocatable symbols
+
+itoa_pop 0000020C
+
+Symbol: itoa_pop
+   Definitions
+      At line 185 in file lab3part2skeleton.s
+   Uses
+      At line 180 in file lab3part2skeleton.s
+      At line 191 in file lab3part2skeleton.s
+
+lab3 00000050
 
 Symbol: lab3
    Definitions
-      At line 25 in file lab3part2skeleton.s
+      At line 21 in file lab3part2skeleton.s
    Uses
       At line 2 in file lab3part2skeleton.s
 Comment: lab3 used once
@@ -238,131 +526,157 @@ Symbol: lib
    Uses
       None
 Comment: lib unused
-os_loop 000000A0
+loop 00000270
+
+Symbol: loop
+   Definitions
+      At line 236 in file lab3part2skeleton.s
+   Uses
+      At line 248 in file lab3part2skeleton.s
+Comment: loop used once
+os_loop 0000011C
 
 Symbol: os_loop
    Definitions
-      At line 50 in file lab3part2skeleton.s
+      At line 96 in file lab3part2skeleton.s
    Uses
-      At line 56 in file lab3part2skeleton.s
+      At line 101 in file lab3part2skeleton.s
 Comment: os_loop used once
-output_character 000000E0
+output_character 0000015C
 
 Symbol: output_character
    Definitions
-      At line 75 in file lab3part2skeleton.s
+      At line 119 in file lab3part2skeleton.s
    Uses
-      At line 54 in file lab3part2skeleton.s
-Comment: output_character used once
-output_string 0000009C
+      At line 32 in file lab3part2skeleton.s
+      At line 42 in file lab3part2skeleton.s
+      At line 64 in file lab3part2skeleton.s
+      At line 82 in file lab3part2skeleton.s
+      At line 89 in file lab3part2skeleton.s
+      At line 99 in file lab3part2skeleton.s
+
+output_string 00000118
 
 Symbol: output_string
    Definitions
-      At line 48 in file lab3part2skeleton.s
-   Uses
-      At line 30 in file lab3part2skeleton.s
-Comment: output_string used once
-pin_connect_block_setup_for_uart0 00000104
-
-Symbol: pin_connect_block_setup_for_uart0
-   Definitions
-      At line 89 in file lab3part2skeleton.s
-   Uses
-      At line 3 in file lab3part2skeleton.s
-Comment: pin_connect_block_setup_for_uart0 used once
-prompt 00000014
-
-Symbol: prompt
-
-
-
-ARM Macro Assembler    Page 2 Alphabetic symbol ordering
-Relocatable symbols
-
-   Definitions
-      At line 14 in file lab3part2skeleton.s
-   Uses
-      None
-Comment: prompt unused
-prompt_dividen 00000038
-
-Symbol: prompt_dividen
-   Definitions
-      At line 18 in file lab3part2skeleton.s
-   Uses
-      None
-Comment: prompt_dividen unused
-prompt_divisor 00000026
-
-Symbol: prompt_divisor
-   Definitions
-      At line 17 in file lab3part2skeleton.s
-   Uses
-      None
-Comment: prompt_divisor unused
-read_character 000000BC
-
-Symbol: read_character
-   Definitions
-      At line 62 in file lab3part2skeleton.s
-   Uses
-      At line 37 in file lab3part2skeleton.s
-Comment: read_character used once
-read_string 00000078
-
-Symbol: read_string
-   Definitions
-      At line 34 in file lab3part2skeleton.s
-   Uses
-      None
-Comment: read_string unused
-response_quotient 0000004B
-
-Symbol: response_quotient
-   Definitions
-      At line 19 in file lab3part2skeleton.s
-   Uses
-      None
-Comment: response_quotient unused
-response_remainder 00000057
-
-Symbol: response_remainder
-   Definitions
-      At line 20 in file lab3part2skeleton.s
-   Uses
-      None
-Comment: response_remainder unused
-rs_loop 0000007C
-
-Symbol: rs_loop
-   Definitions
-      At line 36 in file lab3part2skeleton.s
-   Uses
+      At line 94 in file lab3part2skeleton.s
 
 
 
 ARM Macro Assembler    Page 3 Alphabetic symbol ordering
 Relocatable symbols
 
-      At line 41 in file lab3part2skeleton.s
-Comment: rs_loop used once
-rstart 000000C4
-
-Symbol: rstart
-   Definitions
-      At line 65 in file lab3part2skeleton.s
    Uses
-      At line 69 in file lab3part2skeleton.s
-Comment: rstart used once
-tstart 000000EC
+      At line 26 in file lab3part2skeleton.s
+      At line 29 in file lab3part2skeleton.s
+      At line 36 in file lab3part2skeleton.s
+      At line 39 in file lab3part2skeleton.s
+      At line 58 in file lab3part2skeleton.s
+      At line 61 in file lab3part2skeleton.s
+      At line 68 in file lab3part2skeleton.s
+      At line 72 in file lab3part2skeleton.s
 
-Symbol: tstart
+pin_connect_block_setup_for_uart0 000002B0
+
+Symbol: pin_connect_block_setup_for_uart0
+   Definitions
+      At line 263 in file lab3part2skeleton.s
+   Uses
+      At line 3 in file lab3part2skeleton.s
+Comment: pin_connect_block_setup_for_uart0 used once
+prompt 00000000
+
+Symbol: prompt
+   Definitions
+      At line 13 in file lab3part2skeleton.s
+   Uses
+      At line 59 in file lab3part2skeleton.s
+      At line 69 in file lab3part2skeleton.s
+
+prompt_dividend 00000024
+
+Symbol: prompt_dividend
+   Definitions
+      At line 16 in file lab3part2skeleton.s
+   Uses
+      At line 25 in file lab3part2skeleton.s
+      At line 27 in file lab3part2skeleton.s
+      At line 45 in file lab3part2skeleton.s
+
+prompt_divisor 00000012
+
+Symbol: prompt_divisor
+   Definitions
+      At line 15 in file lab3part2skeleton.s
+   Uses
+      At line 35 in file lab3part2skeleton.s
+      At line 37 in file lab3part2skeleton.s
+      At line 48 in file lab3part2skeleton.s
+
+read_character 00000138
+
+Symbol: read_character
+   Definitions
+      At line 107 in file lab3part2skeleton.s
+   Uses
+      At line 80 in file lab3part2skeleton.s
+Comment: read_character used once
+read_string 000000E8
+
+Symbol: read_string
+   Definitions
+
+
+
+ARM Macro Assembler    Page 4 Alphabetic symbol ordering
+Relocatable symbols
+
+      At line 77 in file lab3part2skeleton.s
+   Uses
+      At line 28 in file lab3part2skeleton.s
+      At line 38 in file lab3part2skeleton.s
+
+response_quotient 00000037
+
+Symbol: response_quotient
+   Definitions
+      At line 17 in file lab3part2skeleton.s
+   Uses
+      At line 57 in file lab3part2skeleton.s
+Comment: response_quotient used once
+response_remainder 00000043
+
+Symbol: response_remainder
+   Definitions
+      At line 18 in file lab3part2skeleton.s
+   Uses
+      At line 67 in file lab3part2skeleton.s
+Comment: response_remainder used once
+rs_loop 000000EC
+
+Symbol: rs_loop
    Definitions
       At line 79 in file lab3part2skeleton.s
    Uses
-      At line 83 in file lab3part2skeleton.s
+      At line 84 in file lab3part2skeleton.s
+Comment: rs_loop used once
+rstart 00000140
+
+Symbol: rstart
+   Definitions
+      At line 110 in file lab3part2skeleton.s
+   Uses
+      At line 113 in file lab3part2skeleton.s
+Comment: rstart used once
+tstart 00000168
+
+Symbol: tstart
+   Definitions
+      At line 124 in file lab3part2skeleton.s
+   Uses
+      At line 127 in file lab3part2skeleton.s
 Comment: tstart used once
-17 symbols
+25 symbols
 
 
 
@@ -375,7 +689,7 @@ Symbol: U0BA
    Definitions
       At line 8 in file lab3part2skeleton.s
    Uses
-      At line 52 in file lab3part2skeleton.s
+      At line 98 in file lab3part2skeleton.s
 Comment: U0BA used once
 U0LCR 0000000C
 
@@ -391,8 +705,8 @@ Symbol: U0LSR
    Definitions
       At line 6 in file lab3part2skeleton.s
    Uses
-      At line 66 in file lab3part2skeleton.s
-      At line 80 in file lab3part2skeleton.s
+      At line 111 in file lab3part2skeleton.s
+      At line 125 in file lab3part2skeleton.s
 
 3 symbols
-354 symbols in table
+362 symbols in table
