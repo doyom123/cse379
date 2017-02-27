@@ -1,5 +1,5 @@
 *.uvproj
-*.uvgui
+/.uvgui[.a-z]+/
 *.uvopt
 *.scvd
 /**/Listing
