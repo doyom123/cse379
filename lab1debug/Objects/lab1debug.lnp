@@ -1,5 +1,0 @@
---cpu ARM7TDMI
-".\objects\lab1debug.o"
---ro-base 0x00000000 --entry 0x00000000 --rw-base 0x40000000 --strict --summary_stderr --info summarysizes --map --xref --callgraph --symbols
---info sizes --info totals --info unused --info veneers
---list ".\Listings\lab1debug.map" -o .\Objects\lab1debug.axf

@@ -1,8 +1,0 @@
---cpu ARM7TDMI
-".\objects\startup.o"
-".\objects\lab3part1skeleton.o"
-".\objects\lab3wrapper.o"
---strict --scatter ".\Objects\lab3.sct"
---summary_stderr --info summarysizes --map --xref --callgraph --symbols
---info sizes --info totals --info unused --info veneers
---list ".\Listings\lab3.map" -o .\Objects\lab3.axf

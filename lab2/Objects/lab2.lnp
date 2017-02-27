@@ -1,8 +1,0 @@
---cpu ARM7TDMI
-".\objects\startup.o"
-".\objects\lab2.o"
-".\objects\lab2wrapper.o"
---strict --scatter ".\Objects\lab2.sct"
---summary_stderr --info summarysizes --map --xref --callgraph --symbols
---info sizes --info totals --info unused --info veneers
---list ".\Listings\lab2.map" -o .\Objects\lab2.axf
