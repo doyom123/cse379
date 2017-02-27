@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\Objects\lab3part2.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\Objects\lab3part2.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060422: Last Updated: Sat Feb 25 00:23:52 2017
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060422: Last Updated: Mon Feb 27 16:21:10 2017
 <BR><P>
 <H3>Maximum Stack Usage =          8 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -14,6 +14,7 @@ Functions with no stack information
 </H3><UL>
  <LI><a href="#[2]">Reset_Handler</a>
  <LI><a href="#[1a]">__user_initial_stackheap</a>
+ <LI><a href="#[1e]">uart_init</a>
  <LI><a href="#[1f]">lab3</a>
  <LI><a href="#[1d]">pin_connect_block_setup_for_uart0</a>
  <LI><a href="#[3]">Undef_Handler</a>
@@ -235,14 +236,14 @@ Global Symbols
 <BR><BR>[Stack]<UL><LI>Max Depth = 8 + Unknown Stack Size
 <LI>Call Chain = main
 </UL>
-<BR>[Calls]<UL><LI><a href="#[1e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;serial_init
-<LI><a href="#[1d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pin_connect_block_setup_for_uart0 (via Veneer)
+<BR>[Calls]<UL><LI><a href="#[1d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pin_connect_block_setup_for_uart0 (via Veneer)
 <LI><a href="#[1f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;lab3 (via Veneer)
+<LI><a href="#[1e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;uart_init (via Veneer)
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> __rtentry2.o(.ARM.Collect$$rtentry$$0000000D)
 </UL>
-<P><STRONG><a name="[1e]"></a>serial_init</STRONG> (ARM, 40 bytes, Stack size 0 bytes, lab3wrapper.o(i.serial_init))
-<BR><BR>[Called By]<UL><LI><a href="#[a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
+<P><STRONG><a name="[1e]"></a>uart_init</STRONG> (ARM, 0 bytes, Stack size unknown bytes, lab3part2skeleton.o(lib))
+<BR><BR>[Called By]<UL><LI><a href="#[a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main (via Veneer)
 </UL>
 
 <P><STRONG><a name="[1f]"></a>lab3</STRONG> (ARM, 0 bytes, Stack size unknown bytes, lab3part2skeleton.o(lib))

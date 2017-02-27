@@ -1,6 +1,7 @@
 	AREA	lib, CODE, READWRITE	
 	EXPORT lab3
 	EXPORT pin_connect_block_setup_for_uart0
+	EXPORT uart_init
 	
 
 U0LSR EQU 0x14			; UART0 Line Status Register
@@ -17,6 +18,29 @@ prompt_dividend = "Enter a dividend: ", 0
 response_quotient = "Quotient = ", 0
 response_remainder = "Remainder = ", 0
 	ALIGN
+
+uart_init
+	STMFD 	SP!, {lr}
+	
+	MOV 	r1, #131
+	LDR 	r4, =0xE000C00C
+	STR 	r1, [r4]
+	
+	MOV		r1, #120
+	LDR 	r4, =0xE000C000
+	STR 	r1, [r4]
+	
+	MOV 	r1, #0
+	LDR 	r4, =0xE000C004
+	STR 	r1, [r4]
+	
+	MOV 	r1, #3
+	LDR 	r4, =0xE000C00C
+	STR 	r1, [r4]
+	
+	LDMFD 	SP!, {lr}
+	BX 		lr
+	
 
 lab3
 	STMFD SP!,{lr}	; Store register lr on stack
@@ -174,6 +198,13 @@ itoa
 	STRBMI	r5, [r4], #1	; if negative, insert '-' char
 	MVNMI	r0, r0			; if negative, convert to two's comp
 	ADDMI	r0, r0, #1
+	
+	CMP 	r0, #0 			; if int == 0, store in memory to write and branch to end
+	BNE 	itoa_loop		
+	ADD 	r0, r0, #0x30	; convert 0 to char '0'
+	STRB 	r0, [r4], #1	; store 0 in memory
+	B 		itoa_end		; branch to end
+		
 itoa_loop
 	BL 		div_and_mod
 	CMP 	r1, #0			; if remainder == 0, branch to end

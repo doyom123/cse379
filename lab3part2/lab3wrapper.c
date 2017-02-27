@@ -1,4 +1,5 @@
 extern int lab3(void);	
+extern int uart_init(void);
 extern int pin_connect_block_setup_for_uart0(void);
 
 void serial_init(void)
@@ -20,6 +21,6 @@ void serial_init(void)
 int main()
 { 	
    pin_connect_block_setup_for_uart0();
-   serial_init();
+   uart_init();
    lab3();
 }
