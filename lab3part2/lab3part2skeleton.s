@@ -54,6 +54,8 @@ lab3
 	
 	MOV 	r0, #0x0A			; print LF
 	BL 		output_character
+	MOV 	r0, #13				; print CR
+	BL 		output_character
 	
 	; Enter Divisor
 	LDR 	r4, =prompt_divisor
@@ -63,6 +65,8 @@ lab3
 	BL 		output_string		; print user input
 	
 	MOV 	r0, #0x0A			; print LF
+	BL 		output_character
+	MOV 	r0, #13				; print CR
 	BL 		output_character
 	
 	; Convert ASCII to int
@@ -86,6 +90,8 @@ lab3
 	
 	MOV 	r0, #0x0A			; print LF
 	BL 		output_character
+	MOV 	r0, #13				; print CR
+	BL 		output_character
 	
 	; Print Remainder
 	LDR 	r4, =response_remainder
@@ -94,6 +100,11 @@ lab3
 	MOV 	r0, r1
 	BL 		itoa
 	BL 		output_string
+
+	MOV 	r0, #0x0A			; print LF
+	BL 		output_character
+	MOV 	r0, #13				; print CR
+	BL 		output_character
 	
 	LDMFD sp!, {lr}
 	BX lr
@@ -187,7 +198,7 @@ atoi_end
 itoa
 	; Args r4 = base address to store result string
 	; 	   r0 = int to convert
-	; r2 = divisor 10
+	; r1 = divisor 10
 	; r3 = counter
 	STMFD	SP!, {lr, r1-r4}
 	MOV 	r3, #0
@@ -206,10 +217,13 @@ itoa
 	B 		itoa_end		; branch to end
 		
 itoa_loop
-	BL 		div_and_mod
-	CMP 	r1, #0			; if remainder == 0, branch to end
+	MOV 	r1, #10
+	BL 		div_and_mod		; divide by 10
+
+	CMP 	r1, #0			; if remainder == 0
+	CMPEQ 	r0, #0			; and quotient == 0, branch to end
 	BEQ		itoa_pop
-	ADD		r1, r1, #48			; Convert int to ASCII
+	ADD		r1, r1, #48		; Convert int to ASCII
 	PUSH	{r1}			; Push onto stack
 	ADD		r3, r3, #1 		; Increment Counter
 	B 		itoa_loop

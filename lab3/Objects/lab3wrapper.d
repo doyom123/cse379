@@ -1,1 +1,1 @@
-.\objects\lab3wrapper.o: lab3wrapper.c
+.\objects\lab3wrapper.o: ..\lab3part2\lab3wrapper.c
