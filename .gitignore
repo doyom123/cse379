@@ -1,7 +1,9 @@
 *.uvproj
-/.uvgui[.a-z]+/
+*.uvgui
+*.uvgui.doyom
 *.uvopt
 *.scvd
 /**/Listing
 /**/Listings
 /**/Objects
+
