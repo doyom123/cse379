@@ -8,15 +8,61 @@
     EXPORT display_digit_on_7_seg
     EXPORT display_digit_on_7_seg_setup
     EXPORT read_from_push_btns
+    EXPORT read_from_push_btns_setup
     EXPORT illuminateLEDs
+    EXPORT illuminateLEDs_setup
     EXPORT Illuminate_RGB_LED
-    IMPORT digits_SET
-    IMPORT RGB_SET
-
+    EXPORT Illuminate_RGB_LED_setup
 U0BA  EQU 0xE000C000            ; UART0 Base Address
 U0LSR EQU 0x14                  ; UART0 Line Status Register
 U0LCR EQU 0x0C                  ; UART0 Line Control Register
 
+digits_SET  
+        DCD 0x00001F80  ; 0
+        DCD 0x00000300  ; 1 
+        DCD 0x00002D80  ; 2
+        DCD 0x00002780  ; 3
+        DCD 0x00003300  ; 4
+        DCD 0x00003680  ; 5
+        DCD 0x00003E80  ; 6
+        DCD 0x00000380  ; 7
+        DCD 0x00003F80  ; 8
+        DCD 0x00003780  ; 9
+        DCD 0x00003B80  ; A
+        DCD 0x00003F80  ; B
+        DCD 0x00001C80  ; C
+        DCD 0x00001F80  ; D
+        DCD 0x00003C80  ; E
+        DCD 0x00003880  ; F
+    ALIGN
+
+RGB_SET
+        DCD 0x00020000  ; 0. red
+        DCD 0x00020000  ; 1. green
+        DCD 0x00040000  ; 2. blue
+        DCD 0x00060000  ; 3. purple
+        DCD 0x00220000  ; 4. yellow
+        DCD 0x00260000  ; 5. white
+    ALIGN
+
+LED_SET
+        DCD 0x00000000  ; 0
+        DCD 0x00080000  ; 1
+        DCD 0x00040000  ; 2
+        DCD 0x000C0000  ; 3
+        DCD 0x00020000  ; 4
+        DCD 0x000A0000  ; 5
+        DCD 0x00060000  ; 6
+        DCD 0x000E0000  ; 7
+        DCD 0x00010000  ; 8
+        DCD 0x00090000  ; 9
+        DCD 0x00050000  ; 10
+        DCD 0x000D0000  ; 11
+        DCD 0x00030000  ; 12
+        DCD 0x000B0000  ; 13
+        DCD 0x00070000  ; 14
+        DCD 0x000F0000  ; 15
+    ALIGN   
 
 ; ***************************
 ; Initialize UART0
@@ -148,8 +194,8 @@ htoi_end
 display_digit_on_7_seg        
     STMFD   SP!, {lr, r0-r3}
     BL      hex_to_int          ; convert hex char to int
-    LDR     r1, =0xE0028018     ; load IO0CLR Base Address
-    LDR     r2, =0x00003F80
+    LDR     r1, =0xE002800C     ; load IO0CLR Base Address
+    LDR     r2, =0x00003F80     ; mask for p0.7-p0.13
     STR     r2, [r1];           ; clear display
     LDR     r1, =0xE0028C04     ; load IO0SET Base Address
     LDR     r3,= digits_SET
@@ -161,16 +207,16 @@ display_digit_on_7_seg
     BX lr
 
 display_digit_on_7_seg_setup
-    STMFD   SP!, {lr, r0-r3}
+    STMFD   SP!, {lr, r1-r3}
     LDR     r1, =0xE002C000     ; load Pin Connect Block
-    LDR     r2, =0x0FFFC000     ; p0.07 - p0.13
+    LDR     r2, =0x0FFFC000     ; mask for p0.07 - p0.13
     LDR     r3, [r1]
     BIC     r3, r3, r2          ; Clear bits
     STR     r3, [r1]            ; Set p0.7 - p0.13 as GPIO
     LDR     r1, =0xE0028008     ; load I0DIR Base Address 
     LDR     r2, =0x00003F80     
     STR     r2, [r1];           ; Set pins p0.7 - p0.13 as output 
-    LDMFD   SP!, {lr}
+    LDMFD   SP!, {lr, r1-r3}
     BX lr
 
 
@@ -214,12 +260,26 @@ btns_end
     LDMFD   SP!, {lr, r1-r3}
     BX lr
 
+read_from_push_btns_setup
+    STMFD   SP!, {lr}
+
+
+    LDMFD   SP!, {lr}
+    BX lr
+
+
 ; ***************************
 ; Illuminates a selected set of LEDs
 ; ARGS: r0 = pattern indicating which LEDs to illuminate
 ; RETURN: none
 ; ***************************
 illuminateLEDs
+    STMFD   SP!, {lr}
+
+
+    LDMFD   SP!, {lr}
+    BX lr
+illuminateLEDs_setup
     STMFD   SP!, {lr}
 
 
@@ -252,6 +312,14 @@ Illuminate_RGB_LED
 
     LDMFD   SP!, {lr}
     BX lr
+
+Illuminate_RGB_LED_setup
+    STMFD   SP!, {lr}
+
+
+    LDMFD   SP!, {lr}
+    BX lr
+
 
 pin_connect_block_setup_for_uart0
     STMFD sp!, {r0, r1, lr}
