@@ -13,9 +13,20 @@
     EXPORT illuminateLEDs_setup
     EXPORT Illuminate_RGB_LED
     EXPORT Illuminate_RGB_LED_setup
+
 U0BA  EQU 0xE000C000            ; UART0 Base Address
 U0LSR EQU 0x14                  ; UART0 Line Status Register
 U0LCR EQU 0x0C                  ; UART0 Line Control Register
+PINSEL0 EQU 0xE002C000          ; Pin Connect Block Port 0
+PINSEL1 EQU 0xE002C004
+IO0DIR  EQU 0xE0028008          ; GPIO Direction Registers
+IO1DIR  EQU 0xE0028018
+IO0SET  EQU 0xE0028004          ; GPIO Output Set Registers
+IO1SET  EQU 0xE0028014
+IO0CLR  EQU 0xE002800C          ; GPIO Output Clear Registers
+IO1CLR  EQU 0xE002801C
+IO0PIN  EQU 0xE0028000          ; GPIO Port Pin Value Registers
+IO1PIN  EQU 0xE0028010
 
 digits_SET  
         DCD 0x00001F80  ; 0
@@ -150,8 +161,8 @@ rs_loop
     MOV     r0, #0x0A           ; print new line
     BL      output_character    ; 
     
-    LDMFD sp!, {lr, r0, r4, r5}
-    BX lr
+    LDMFD   sp!, {lr, r0, r4, r5}
+    BX      lr
 
 ; ***************************
 ; Output NULL terminated string to UART0
@@ -167,8 +178,8 @@ os_loop
     CMP     r0, #0              ; check if char is 0
     BNE     os_loop             ; loop if char != 0
     
-    LDMFD sp!, {lr, r0, r1, r4}
-    BX lr
+    LDMFD   sp!, {lr, r0, r1, r4}
+    BX      lr
 
 ; ***************************
 ; Convert hexadecimal char to int
@@ -183,7 +194,7 @@ hex_to_int
     SUB     r0, r0, #55         ; else r0 == [A-F]
 htoi_end
     LDMFD   SP!, {lr}
-    BX lr
+    BX      lr
 
 
 ; ***************************
@@ -194,7 +205,7 @@ htoi_end
 display_digit_on_7_seg        
     STMFD   SP!, {lr, r0-r3}
     BL      hex_to_int          ; convert hex char to int
-    LDR     r1, =0xE002800C     ; load IO0CLR Base Address
+    LDR     r1, =IO0CLR         ; load IO0CLR Base Address
     LDR     r2, =0x00003F80     ; mask for p0.7-p0.13
     STR     r2, [r1];           ; clear display
     LDR     r1, =0xE0028C04     ; load IO0SET Base Address
@@ -208,64 +219,70 @@ display_digit_on_7_seg
 
 display_digit_on_7_seg_setup
     STMFD   SP!, {lr, r1-r3}
-    LDR     r1, =0xE002C000     ; load Pin Connect Block
+    LDR     r1, =PINSEL0        ; load Pin Connect Block
     LDR     r2, =0x0FFFC000     ; mask for p0.07 - p0.13
     LDR     r3, [r1]
     BIC     r3, r3, r2          ; Clear bits
     STR     r3, [r1]            ; Set p0.7 - p0.13 as GPIO
-    LDR     r1, =0xE0028008     ; load I0DIR Base Address 
+    LDR     r1, =IO0DIR         ; load IO0DIR Base Address 
     LDR     r2, =0x00003F80     
-    STR     r2, [r1];           ; Set pins p0.7 - p0.13 as output 
+    LDR     r3, [r1]
+    ORR     r3, r3, r2
+    STR     r3, [r1];           ; Set pins p0.7 - p0.13 as output 
     LDMFD   SP!, {lr, r1-r3}
-    BX lr
+    BX      lr
 
 
 ; ***************************
 ; Reads the momentary push buttons
 ; ARGS  : none
-; RETURN: r0 = value read / 0 if no btn_pressed
+; RETURN: r0 = value read as char / '0' if no btn_pressed
 ; ***************************
 read_from_push_btns
     STMFD   SP!, {lr, r1-r3}
-    LDR     r1, =0xE0028010     ; load IO1PIN Base Address
+    LDR     r1, =IO1PIN         ; load IO1PIN Base Address
     LDR     r2, [r1]            ; load IO1PIN value 
     
     MOV     r0, #0
     LDR     r3, =0x00100000     ; btn_1 mask = 0x00100000
     AND     r0, r2, r3
     CMP     r0, r3              ; if IO1PIN && mask
-    MOVEQ   r0, #1              ; set return value to 1
+    MOVEQ   r0, #49             ; set return value to '1'
     BEQ     btns_end            ; branch to end
 
     LDR     r3, =0x00200000     ; btn_2 mask = 0x00200000
     AND     r0, r2, r3
     CMP     r0, r3              ; if IO1PIN && mask
-    MOVEQ   r0, #2              ; set return value to 2
-    BEQ     btns_end            ; branch to end    
+    MOVEQ   r0, #50             ; set return value to '2'
+    BEQ     btns_end            ; branch to end
 
     LDR     r3, =0x00400000     ; btn_3 mask = 0x00400000
     AND     r0, r2, r3
     CMP     r0, r3              ; if IO1PIN && mask
-    MOVEQ   r0, #3              ; set return value to 3
+    MOVEQ   r0, #51             ; set return value to '3'
     BEQ     btns_end            ; branch to end
 
     LDR     r3, =0x00800000     ; btn_4 mask = 0x00800000
     AND     r0, r2, r3
     CMP     r0, r3              ; if IO1PIN && mask
-    MOVEQ   r0, #4              ; set return value to 4
+    MOVEQ   r0, #52             ; set return value to '4'
     BEQ     btns_end            ; branch to end
 
-    MOV     r0, #0              ; return 0 if no btn pressed
+    MOV     r0, #48             ; return '0' if no btn pressed
 btns_end     
     LDMFD   SP!, {lr, r1-r3}
     BX lr
 
 read_from_push_btns_setup
-    STMFD   SP!, {lr}
+    STMFD   SP!, {lr, r1-r3}
+    LDR     r1, =IO1DIR         ; load IO1DIR
+    LDR     r2, =0x000F0000     ; mask for p1.20 - p1.23
+    LDR     r3, [r1];
+    BIC     r3, r3, r2          ; set to 0 for input
+    STR     r3, [r1]            ; set p1.20 -p1.23 as input
 
-
-    LDMFD   SP!, {lr}
-    BX lr
+    LDMFD   SP!, {lr, r1-r3}
+    BX      lr
 
 
 ; ***************************
@@ -274,17 +291,28 @@ read_from_push_btns_setup
 ; RETURN: none
 ; ***************************
 illuminateLEDs
-    STMFD   SP!, {lr}
-
-
-    LDMFD   SP!, {lr}
-    BX lr
+    STMFD   SP!, {lr, r1-r3}
+    LDR     r1, =IO1CLR         ; load IO1CLR Base Address
+    LDR     r2, =0x000F0000     ; mask for p1.16-p1.19
+    STR     r2, [r1]            ; clear LEDs
+    LDR     r1, =IO1SET         ; load IO1SET Base Address
+    MOV     r0, r0, LSL #2      ; increment * 4
+    LDR     r3, =LED_SET        
+    LDR     r2, [r3, r0]        ; load pattern for LED
+    LDR     r3, [r1]            
+    ORR     r3, r3, r2          ; ORR with IO1SET value with mask to set
+    STR     r3, [r1]            ; store in IO1SET to display
+    LDMFD   SP!, {lr, r1-r3}
+    BX      lr
 illuminateLEDs_setup
-    STMFD   SP!, {lr}
-
-
-    LDMFD   SP!, {lr}
-    BX lr
+    STMFD   SP!, {lr, r1-r3}
+    LDR     r1, =IO1DIR         ; load IO1DIR
+    LDR     r2, =0x000F0000     ; mask for p1.16-p1.19
+    LDR     r3, [r1]
+    ORR     r3, r3, r2
+    STR     r3, [r1]            ; set p1.16-p1.19 as output
+    LDMFD   SP!, {lr, r1-r3}
+    BX      lr
 
 ; ***************************
 ; Illuminates the RGB LED
@@ -298,7 +326,7 @@ illuminateLEDs_setup
 ; RETURN: none
 ; ***************************
 Illuminate_RGB_LED
-    STMFD   SP!, {lr}
+    STMFD   SP!, {lr, r0-r3}
 
     BL      hex_to_int          ; convert hex char to int
     LDR     r1, =0xE0028018     ; load IO0CLR Base Address
@@ -310,20 +338,23 @@ Illuminate_RGB_LED
     LDR     r2, [r3, r0]        ; Load pattern for digit
     STR     r2, [r1]            ; store in IO0SET to display  
 
-    LDMFD   SP!, {lr}
+    LDMFD   SP!, {lr, r0-r3}
     BX lr
 
 Illuminate_RGB_LED_setup
-    STMFD   SP!, {lr}
-
-
-    LDMFD   SP!, {lr}
-    BX lr
+    STMFD   SP!, {lr, r1-r3}
+    LDR     r1, =IO0DIR         ; load IO0DIR Base Address
+    LDR     r2, =0x00260000     ; mask for p0.17, p0.18, p0.21
+    LDR     r3, [r1]
+    ORR     r3, r3, r2
+    STR     r3, [r1]            ; set p0.17,18,21 as output
+    LDMFD   SP!, {lr, r1-r3}
+    BX      lr
 
 
 pin_connect_block_setup_for_uart0
     STMFD sp!, {r0, r1, lr}
-    LDR r0, =0xE002C000  ; PINSEL0
+    LDR r0, =PINSEL0            ; PINSEL0
     LDR r1, [r0]
     ORR r1, r1, #5
     BIC r1, r1, #0xA
