@@ -13,7 +13,8 @@
     EXPORT illuminateLEDs_setup
     EXPORT Illuminate_RGB_LED
     EXPORT Illuminate_RGB_LED_setup
-
+    EXPORT newline
+    EXPORT strlen
 U0BA  EQU 0xE000C000            ; UART0 Base Address
 U0LSR EQU 0x14                  ; UART0 Line Status Register
 U0LCR EQU 0x0C                  ; UART0 Line Control Register
@@ -159,8 +160,7 @@ rs_loop
     STRB    r5, [r4, #-1]!      ; decrement buff index, then append NULL char
     
     MOV     r0, #0x0A           ; print new line
-    BL      output_character    ; 
-    
+    BL      output_character     
     LDMFD   sp!, {lr, r0, r4, r5}
     BX      lr
 
@@ -177,23 +177,22 @@ os_loop
     BL      output_character    ; output char in r0 
     CMP     r0, #0              ; check if char is 0
     BNE     os_loop             ; loop if char != 0
-    
     LDMFD   sp!, {lr, r0, r1, r4}
     BX      lr
 
 ; ***************************
-; Convert hexadecimal char to int
+; Convert a single hexadecimal char to int
 ; ARGS  : r0 = hex char to convert
 ; RETURN: r0 = converted int
 ; ***************************
 hex_to_int
     STMFD   SP!, {lr}
-    CMP     r0, #65
+    CMP     r0, #65             ; Compare r0 and A/65
     SUBMI   r0, r0, #48         ; if r0 == [0-9]
     BMI     htoi_end
     SUB     r0, r0, #55         ; else r0 == [A-F]
 htoi_end
-    LDMFD   SP!, {lr}
+    LDMFD   SP!, {lr, r1, r2}
     BX      lr
 
 
@@ -213,7 +212,6 @@ display_digit_on_7_seg
     MOV     r0, r0, LSL #2      ; increment * 4
     LDR     r2, [r3, r0]        ; Load pattern for digit
     STR     r2, [r1]            ; store in IO0SET to display  
-
     LDMFD   SP!, {lr, r0-r3}
     BX lr
 
@@ -280,7 +278,6 @@ read_from_push_btns_setup
     LDR     r3, [r1];
     BIC     r3, r3, r2          ; set to 0 for input
     STR     r3, [r1]            ; set p1.20 -p1.23 as input
-
     LDMFD   SP!, {lr, r1-r3}
     BX      lr
 
@@ -315,7 +312,7 @@ illuminateLEDs_setup
     BX      lr
 
 ; ***************************
-; Illuminates the RGB LED
+; Ilumiantes the RGB LED
 ; ARGS: r0 = color to display
 ;            0. red
 ;            1. green
@@ -327,7 +324,6 @@ illuminateLEDs_setup
 ; ***************************
 Illuminate_RGB_LED
     STMFD   SP!, {lr, r0-r3}
-
     BL      hex_to_int          ; convert hex char to int
     LDR     r1, =0xE0028018     ; load IO0CLR Base Address
     LDR     r2, =0x00260000     ;  
@@ -337,7 +333,6 @@ Illuminate_RGB_LED
     MOV     r0, r0, LSL #2      ; increment * 4
     LDR     r2, [r3, r0]        ; Load pattern for digit
     STR     r2, [r1]            ; store in IO0SET to display  
-
     LDMFD   SP!, {lr, r0-r3}
     BX lr
 
@@ -351,15 +346,75 @@ Illuminate_RGB_LED_setup
     LDMFD   SP!, {lr, r1-r3}
     BX      lr
 
+; ***************************
+; Print new line using LF, CR
+; ARGS  : none
+; RETURN: none
+; ***************************
+newline
+    STMFD   SP!, {lr, r0}
+    MOV     r0, #0x0A           ; print LF
+    BL      output_character
+    MOV     r0, #13             ; print CR
+    BL      output_character
+    LDMFD   SP!, {lr, r0}
+    BX      lr
+
+; ***************************
+; Returns length of string
+; ARGS  : r4 = base address of string to assess
+; RETURN: r0 = length of string (does not include NULL terminator)
+; ***************************
+strlen
+    STMFD   SP!, {lr, r1,r2}
+    MOV     r1, #0              ; initialize r1 as counter
+str_len_loop    
+    LDRB    r2, [r4], r1        ; load byte
+    CMP     r2, #0              ; check to see if r2 == NULL terminator
+    ADDNE   r1, #1              ; if r2 != NULL, increment counter
+    BNE     str_len_loop        ; and branch to loop
+    MOV     r0, r1
+    LDMFD   SP!, {lr}
+    BX      lr
+
+; ***************************
+; Converts a number string to an int value
+; ARGS  : r4 = base address of string to assess
+; RETURN: r0 = converted int
+; ***************************
+atoi
+    STMFD   SP!, {lr, r2-r4}
+    MOV     r2, #0              ; initialize running total
+    MOV     r3, #10             ; initialize multiplier
+    ; Check sign
+    MOV     r5, #0              ; initialize r5 to store sign flag
+    LDRB    r0, [r4], #1        ; Load first char byte
+    CMP     r0, #0x2D
+    MOVEQ   r5, #1              ; Set r5 = 1 if negative, 0 if positive
+atoi_loop
+    LDRB    r0, [r4], #1        ; Load next char byte
+    CMP     r0, #0              ; if r0 == NULL terminator then
+    BEQ     atoi_end            ; branch to end of subroutine
+    SUB     r0, r0, #48         ; Conver to int
+    MLA     r2, r3, r2, r0      ; r2 = (r3 * r2) + r0
+    B       atoi_loop
+atoi_end
+    CMP     r5, #1              ; Convert to two's comp if negative
+    MVNEQ   r2, r2              ; Take complement of r2
+    ADDEQ   r2, r2, #1          ; then add 1
+    MOV     r0, r2              ; Return in r0
+    LDMFD   SP!, {lr, r2-r4}
+    BX      lr
+
 
 pin_connect_block_setup_for_uart0
-    STMFD sp!, {r0, r1, lr}
+    STMFD SP!, {lr, r0, r1}
     LDR r0, =PINSEL0            ; PINSEL0
     LDR r1, [r0]
     ORR r1, r1, #5
     BIC r1, r1, #0xA
     STR r1, [r0]
-    LDMFD sp!, {r0, r1, lr}
+    LDMFD SP!, {lr, r0, r1}
     BX lr
 
     END    
