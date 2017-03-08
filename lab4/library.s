@@ -14,7 +14,9 @@
     EXPORT Illuminate_RGB_LED
     EXPORT Illuminate_RGB_LED_setup
     EXPORT newline
-    EXPORT strlen
+    EXPORT str_len
+    EXPORT atoi
+
 U0BA  EQU 0xE000C000            ; UART0 Base Address
 U0LSR EQU 0x14                  ; UART0 Line Status Register
 U0LCR EQU 0x0C                  ; UART0 Line Control Register
@@ -183,27 +185,48 @@ os_loop
 ; ***************************
 ; Convert a single hexadecimal char to int
 ; ARGS  : r0 = hex char to convert
-; RETURN: r0 = converted int
+; RETURN: r0 = converted int, 16 on error
 ; ***************************
 hex_to_int
-    STMFD   SP!, {lr}
-    CMP     r0, #65             ; Compare r0 and A/65
-    SUBMI   r0, r0, #48         ; if r0 == [0-9]
-    BMI     htoi_end
+    STMFD   SP!, {lr, r3, r4}
+    MOV     r3, #0              
+    MOV     r4, #0
+    ; check if input == [0-9]
+    SUBS    r3, r0, #48         
+    RSBS    r4, r0, #57         
+    CMP     r3, #0              ; if r0 >= '0'
+    CMPPL   r4, #0              ; AND r <= '9'
+    BPL     htoi_num
+    ; check if input == [A-F]
+    SUBS    r3, r0, #65
+    RSBS    r4, r0, #70
+    CMP     r3, #0              ; if r0 >= 'A'
+    CMPPL   r4, #0              ; and r0 <= 'F'
+    BPL     htoi_alpha  
+    ; if error
+    MOV     r0, #16             ; set return error, r0 = 16
+    B       htoi_end
+htoi_num    
+    SUB   r0, r0, #48           ; if r0 == [0-9]
+    B     htoi_end
+htoi_alpha
     SUB     r0, r0, #55         ; else r0 == [A-F]
 htoi_end
-    LDMFD   SP!, {lr, r1, r2}
+    LDMFD   SP!, {lr, r3, r4}
     BX      lr
 
 
 ; ***************************
 ; Display hexadcimal on the seven-segment display
-; ARGS  : r0 = digit to display
-; RETURN: none
+; ARGS  : r0 = char to display
+; RETURN: r0 = 1 on error
 ; ***************************
 display_digit_on_7_seg        
     STMFD   SP!, {lr, r0-r3}
     BL      hex_to_int          ; convert hex char to int
+    CMP     r0, #16             ; check for invalid input
+    MOVEQ   r0, #1              ; set error return
+    BEQ     seven_seg_end 
     LDR     r1, =IO0CLR         ; load IO0CLR Base Address
     LDR     r2, =0x00003F80     ; mask for p0.7-p0.13
     STR     r2, [r1];           ; clear display
@@ -211,7 +234,8 @@ display_digit_on_7_seg
     LDR     r3,= digits_SET
     MOV     r0, r0, LSL #2      ; increment * 4
     LDR     r2, [r3, r0]        ; Load pattern for digit
-    STR     r2, [r1]            ; store in IO0SET to display  
+    STR     r2, [r1]            ; store in IO0SET to display
+seven_seg_end
     LDMFD   SP!, {lr, r0-r3}
     BX lr
 
@@ -365,7 +389,7 @@ newline
 ; ARGS  : r4 = base address of string to assess
 ; RETURN: r0 = length of string (does not include NULL terminator)
 ; ***************************
-strlen
+str_len
     STMFD   SP!, {lr, r1,r2}
     MOV     r1, #0              ; initialize r1 as counter
 str_len_loop    
@@ -378,7 +402,7 @@ str_len_loop
     BX      lr
 
 ; ***************************
-; Converts a number string to an int value
+; Converts a signed number string to an int value
 ; ARGS  : r4 = base address of string to assess
 ; RETURN: r0 = converted int
 ; ***************************
@@ -388,9 +412,10 @@ atoi
     MOV     r3, #10             ; initialize multiplier
     ; Check sign
     MOV     r5, #0              ; initialize r5 to store sign flag
-    LDRB    r0, [r4], #1        ; Load first char byte
+    LDRB    r0, [r4]            ; Load first char byte
     CMP     r0, #0x2D
     MOVEQ   r5, #1              ; Set r5 = 1 if negative, 0 if positive
+    ADDEQ   r4, #1              ; increment place in address by 1
 atoi_loop
     LDRB    r0, [r4], #1        ; Load next char byte
     CMP     r0, #0              ; if r0 == NULL terminator then
