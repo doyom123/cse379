@@ -124,26 +124,55 @@ lab4_hex_display_loop
     ; Validate input
     BL      str_len
     CMP     r0, #2                  ; if str_len > 1
-    LDREQ   r4, =str_error          ; then load error msg
-    BLEQ    output_string           ; and print error msg
-    BEQ     lab4_hex_display_loop   ; and branch to loop
+    LDRPL   r4, =str_error          ; then load error msg
+    BLPL    output_string           ; and print error msg
+    BPL     lab4_hex_display_loop   ; and branch to loop
 
     LDRB    r0, [r4]                ; load inputted hexadecimal char [0-9, A-F]
     BL      display_digit_on_7_seg
     CMP     r0, #1                  ; check if returned error, r0 == 1
     LDREQ   r4, =str_error          ; then load error msg
     BLEQ    output_string           ; and print error msg
-    BEQ     lab4_hex_display_loop   ; and branch to loop
+    B       lab4_hex_display_loop   ; branch to loop
 
 
 
 lab4_RGB
+    BL      Illuminate_RGB_LED_setup
     LDR     r4, =str_RGB_instr
     BL      output_string
     LDR     r4, =str_RGB_options
     BL      output_string
+lab4_RGB_loop    
     LDR     r4, =str_prompt
     BL      output_string
+    LDR     r4, =str_user
+    BL      read_string
+
+    ; Validate input
+    BL      str_len
+    CMP     r0, #2                  ; if str_len > 1
+    LDRPL   r4, =str_error          ; then load error msg
+    BLPL    output_string           ; and print error msg
+    BPL     lab4_RGB_loop           ; and branch to loop
+
+    LDR     r4, =str_user
+    BL      atoi                    ; convert input to int
+    LDR     r4, =str_error
+    CMP     r0, #7                  ; if r0 == 7
+    BEQ     lab4_main               ; then branch to main
+
+    BLGT    output_string           ; if r0 > 7, print error message
+    BGT     lab4_RGB_loop           ; and branch to loop
+
+    CMP     r0, #0                  ; if r0 < 0
+    BLPL    output_string           ; then print error msg
+    BPL     lab4_RGB_loop           ; and bracnch to loop
+
+    BL      Illuminate_RGB_LED
+    B       lab4_RGB_loop           ; return to loop
+
+
 
 lab4_quit   
     LDR     r4, =str_quit
@@ -155,6 +184,54 @@ lab4_quit
 test
     STMFD   SP!, {lr}
 
+    ; LEDs test
+    BL      illuminateLEDs_setup
+    LDR     r4, =str_LEDs_instr
+    BL      output_string
+    LDR     r4, =str_prompt
+    BL      output_string
+    LDR     r4, =str_user
+    BL      read_string
+    BL      atoi
+    BL      illuminateLEDs
+    B       test
+
+    ; Hex test
+    BL      display_digit_on_7_seg_setup
+    LDR     r4, =str_hex_display_instr
+    BL      output_string
+    LDR     r4, =prompt
+    BL      output_string
+    LDR     r4, =str_user
+    BL      read_string
+    MOV     r0, #0
+    LDRB    r0, [r4]
+    BL      display_digit_on_7_seg
+    B       test
+
+    ; RGB test
+    BL      Illuminate_RGB_LED_setup
+    LDR     r4, =str_RGB_instr
+    BL      output_string
+    LDR     r4, =str_RGB_options
+    BL      output_string
+    LDR     r4, =str_user
+    BL      read_string
+    BL      atoi
+    BL      Illuminate_RGB_LED
+    B       test
+
+    ; Push Buttons test
+    BL      read_from_push_btns_setup
+    LDR     r4, =str_push_btns_instr
+    BL      output_string
+    LDR     r4, =str_push_btns_output
+    BL      read_from_push_btns
+    CMP     r0, #48
+    BLNE    output_string
+    BLNE    output_character
+    BLNE    newline
+    B       test
 
 
     LDMFD   SP!, {lr}

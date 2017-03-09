@@ -52,7 +52,7 @@ digits_SET
 
 RGB_SET
         DCD 0x00020000  ; 0. red
-        DCD 0x00020000  ; 1. green
+        DCD 0x00200000  ; 1. green
         DCD 0x00040000  ; 2. blue
         DCD 0x00060000  ; 3. purple
         DCD 0x00220000  ; 4. yellow
@@ -222,7 +222,7 @@ htoi_end
 ; RETURN: r0 = 1 on error
 ; ***************************
 display_digit_on_7_seg        
-    STMFD   SP!, {lr, r0-r3}
+    STMFD   SP!, {lr, r1-r3}
     BL      hex_to_int          ; convert hex char to int
     CMP     r0, #16             ; check for invalid input
     MOVEQ   r0, #1              ; set error return
@@ -236,7 +236,7 @@ display_digit_on_7_seg
     LDR     r2, [r3, r0]        ; Load pattern for digit
     STR     r2, [r1]            ; store in IO0SET to display
 seven_seg_end
-    LDMFD   SP!, {lr, r0-r3}
+    LDMFD   SP!, {lr, r1-r3}
     BX lr
 
 display_digit_on_7_seg_setup
@@ -308,7 +308,7 @@ read_from_push_btns_setup
 
 ; ***************************
 ; Illuminates a selected set of LEDs
-; ARGS: r0 = pattern indicating which LEDs to illuminate
+; ARGS  : r0 = pattern indicating which LEDs to illuminate
 ; RETURN: none
 ; ***************************
 illuminateLEDs
@@ -344,12 +344,13 @@ illuminateLEDs_setup
 ;            3. purple
 ;            4. yellow
 ;            5. white
+;            6. quit
 ; RETURN: none
 ; ***************************
 Illuminate_RGB_LED
     STMFD   SP!, {lr, r0-r3}
     BL      hex_to_int          ; convert hex char to int
-    LDR     r1, =0xE0028018     ; load IO0CLR Base Address
+    LDR     r1, =IO0CLR         ; load IO0CLR Base Address
     LDR     r2, =0x00260000     ;  
     STR     r2, [r1];           ; clear RGB_LED
     LDR     r1, =0xE0028C04     ; load IO0SET Base Address
@@ -390,15 +391,15 @@ newline
 ; RETURN: r0 = length of string (does not include NULL terminator)
 ; ***************************
 str_len
-    STMFD   SP!, {lr, r1,r2}
+    STMFD   SP!, {lr, r1, r2, r4}
     MOV     r1, #0              ; initialize r1 as counter
 str_len_loop    
-    LDRB    r2, [r4], r1        ; load byte
+    LDRB    r2, [r4], #1        ; load byte
     CMP     r2, #0              ; check to see if r2 == NULL terminator
     ADDNE   r1, #1              ; if r2 != NULL, increment counter
     BNE     str_len_loop        ; and branch to loop
     MOV     r0, r1
-    LDMFD   SP!, {lr}
+    LDMFD   SP!, {lr, r1, r2, r4}
     BX      lr
 
 ; ***************************
