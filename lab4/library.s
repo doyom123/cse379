@@ -30,6 +30,7 @@ IO0CLR  EQU 0xE002800C          ; GPIO Output Clear Registers
 IO1CLR  EQU 0xE002801C
 IO0PIN  EQU 0xE0028000          ; GPIO Port Pin Value Registers
 IO1PIN  EQU 0xE0028010
+    ALIGN
 
 digits_SET  
         DCD 0x00001F80  ; 0
@@ -60,22 +61,23 @@ RGB_SET
     ALIGN
 
 LED_SET
-        DCD 0x00000000  ; 0
-        DCD 0x00080000  ; 1
-        DCD 0x00040000  ; 2
-        DCD 0x000C0000  ; 3
-        DCD 0x00020000  ; 4
-        DCD 0x000A0000  ; 5
-        DCD 0x00060000  ; 6
-        DCD 0x000E0000  ; 7
-        DCD 0x00010000  ; 8
-        DCD 0x00090000  ; 9
-        DCD 0x00050000  ; 10
-        DCD 0x000D0000  ; 11
-        DCD 0x00030000  ; 12
-        DCD 0x000B0000  ; 13
-        DCD 0x00070000  ; 14
-        DCD 0x000F0000  ; 15
+        DCD 0x000F0000  ; 0
+        DCD 0x00070000  ; 1
+        DCD 0x000B0000  ; 2
+        DCD 0x00030000  ; 3
+        DCD 0x000D0000  ; 4
+        DCD 0x00050000  ; 5
+        DCD 0x00090000  ; 6
+        DCD 0x00010000  ; 7
+        DCD 0x000E0000  ; 8
+        DCD 0x00060000  ; 9
+        DCD 0x000A0000  ; 10
+        DCD 0x00020000  ; 11
+        DCD 0x000C0000  ; 12
+        DCD 0x00040000  ; 13
+        DCD 0x00080000  ; 14
+        DCD 0x00000000  ; 15
+        
     ALIGN   
 
 ; ***************************
@@ -265,40 +267,47 @@ read_from_push_btns
     LDR     r1, =IO1PIN         ; load IO1PIN Base Address
     LDR     r2, [r1]            ; load IO1PIN value 
     
-    MOV     r0, #0
-    LDR     r3, =0x00100000     ; btn_1 mask = 0x00100000
-    AND     r0, r2, r3
-    CMP     r0, r3              ; if IO1PIN && mask
-    MOVEQ   r0, #49             ; set return value to '1'
-    BEQ     btns_end            ; branch to end
+    LSR     r2, #20             ; right shift places p1.20-p1.23 into LSByte
+    MVN     r2, r2              ; take complement 
+    LDR     r3, =0xFFFFFFF0
+    BIC     r2, r3              ; bit clear everything except LSByte
+    ADD     r2, #48             ; add 48 to convert to char
+    MOV     r0, r2              ; return in r0
 
-    LDR     r3, =0x00200000     ; btn_2 mask = 0x00200000
-    AND     r0, r2, r3
-    CMP     r0, r3              ; if IO1PIN && mask
-    MOVEQ   r0, #50             ; set return value to '2'
-    BEQ     btns_end            ; branch to end
+;     MOV     r0, #0
+;     LDR     r3, =0x00E00000     ; btn_1 mask = 0x00100000
+;     AND     r0, r2, r3
+;     CMP     r0, r3              ; if IO1PIN && mask
+;     MOVEQ   r0, #49             ; set return value to '1'
+;     BEQ     btns_end            ; branch to end
 
-    LDR     r3, =0x00400000     ; btn_3 mask = 0x00400000
-    AND     r0, r2, r3
-    CMP     r0, r3              ; if IO1PIN && mask
-    MOVEQ   r0, #51             ; set return value to '3'
-    BEQ     btns_end            ; branch to end
+;     LDR     r3, =0x00D00000     ; btn_2 mask = 0x00200000
+;     AND     r0, r2, r3
+;     CMP     r0, r3              ; if IO1PIN && mask
+;     MOVEQ   r0, #50             ; set return value to '2'
+;     BEQ     btns_end            ; branch to end
 
-    LDR     r3, =0x00800000     ; btn_4 mask = 0x00800000
-    AND     r0, r2, r3
-    CMP     r0, r3              ; if IO1PIN && mask
-    MOVEQ   r0, #52             ; set return value to '4'
-    BEQ     btns_end            ; branch to end
+;     LDR     r3, =0x00B00000     ; btn_3 mask = 0x00400000
+;     AND     r0, r2, r3
+;     CMP     r0, r3              ; if IO1PIN && mask
+;     MOVEQ   r0, #51             ; set return value to '3'
+;     BEQ     btns_end            ; branch to end
 
-    MOV     r0, #48             ; return '0' if no btn pressed
-btns_end     
+;     LDR     r3, =0x00700000     ; btn_4 mask = 0x00800000
+;     AND     r0, r2, r3
+;     CMP     r0, r3              ; if IO1PIN && mask
+;     MOVEQ   r0, #52             ; set return value to '4'
+;     BEQ     btns_end            ; branch to end
+
+;     MOV     r0, #48             ; return '0' if no btn pressed
+; btns_end     
     LDMFD   SP!, {lr, r1-r3}
     BX lr
 
 read_from_push_btns_setup
     STMFD   SP!, {lr, r1-r3}
     LDR     r1, =IO1DIR         ; load IO1DIR
-    LDR     r2, =0x000F0000     ; mask for p1.20 - p1.23
+    LDR     r2, =0x00F00000     ; mask for p1.20 - p1.23
     LDR     r3, [r1];
     BIC     r3, r3, r2          ; set to 0 for input
     STR     r3, [r1]            ; set p1.20 -p1.23 as input
@@ -349,14 +358,15 @@ illuminateLEDs_setup
 ; ***************************
 Illuminate_RGB_LED
     STMFD   SP!, {lr, r0-r3}
-    BL      hex_to_int          ; convert hex char to int
+    ;BL      hex_to_int          ; convert hex char to int
     LDR     r1, =IO0CLR         ; load IO0CLR Base Address
     LDR     r2, =0x00260000     ;  
     STR     r2, [r1];           ; clear RGB_LED
-    LDR     r1, =0xE0028C04     ; load IO0SET Base Address
-    LDR     r3,= RGB_SET
+    LDR     r1, =IO0SET         ; load IO0SET Base Address
+    LDR     r3, =RGB_SET
     MOV     r0, r0, LSL #2      ; increment * 4
     LDR     r2, [r3, r0]        ; Load pattern for digit
+    MVN     r2, r2
     STR     r2, [r1]            ; store in IO0SET to display  
     LDMFD   SP!, {lr, r0-r3}
     BX lr

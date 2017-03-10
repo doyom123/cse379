@@ -21,17 +21,17 @@
 
 PIODATA EQU 0x8 ; Offset to parallel I/O data register
     
-str_welcome = "Enter a number to select\n", 0       ; Text to be sent to PuTTy
-str_main = "1. LEDs\n2. Push Buttons\n3. 7-Segment Display\n4. RGB LED\n5. Quit\n", 0
+str_welcome = "Enter a number to select\r\n", 0       ; Text to be sent to PuTTy
+str_main = "1. LEDs\r\n2. Push Buttons\r\n3. 7-Segment Display\r\n4. RGB LED\r\n5. Quit\r\n", 0
 str_prompt = ">> ",0
-str_error = "ERROR: Invalid input\n", 0
-str_quit = "Bye\n", 0
-str_LEDs_instr = "Enter a number [0-15] to display a binary value, 16 to return to main menu.\n", 0
-str_push_btns_instr = "Push a button to display its output. Press any key to return to the main menu.\n", 0
+str_error = "ERROR: Invalid input\r\n", 0
+str_quit = "Bye\r\n", 0
+str_LEDs_instr = "Enter a number [0-15] to display a binary value, 16 to return to main menu.\r\n", 0
+str_push_btns_instr = "Push a button to display its output. Press any key to return to the main menu.\r\n", 0
 str_push_btns_output = "Button Pressed: ", 0
-str_hex_display_instr = "Enter a hexadecimal digit to appear on the 7-segment display\n16 to return to main menu.\n", 0
-str_RGB_instr = "Select a color to illuminate the RGB LED.\n", 0
-str_RGB_options = "1. red\n2. green\n3. blue\n4. purple\n5. yellow\n6.white\n7. Quit\n"
+str_hex_display_instr = "Enter a hexadecimal digit to appear on the 7-segment display\r\n16 to return to main menu.\r\n", 0
+str_RGB_instr = "Select a color to illuminate the RGB LED.\r\n", 0
+str_RGB_options = "0. red\r\n1. green\r\n2. blue\r\n3. purple\r\n4. yellow\r\n5.white\r\n6. Quit\r\n", 0
 
 str_user = "user entered text goes here", 0
     ALIGN
@@ -185,53 +185,53 @@ test
     STMFD   SP!, {lr}
 
     ; LEDs test
-    BL      illuminateLEDs_setup
-    LDR     r4, =str_LEDs_instr
-    BL      output_string
-    LDR     r4, =str_prompt
-    BL      output_string
-    LDR     r4, =str_user
-    BL      read_string
-    BL      atoi
-    BL      illuminateLEDs
-    B       test
+    ;BL      illuminateLEDs_setup
+    ;LDR     r4, =str_LEDs_instr
+    ;BL      output_string
+    ;LDR     r4, =str_prompt
+    ;BL      output_string
+    ;LDR     r4, =str_user
+    ;BL      read_string
+    ;BL      atoi
+    ;BL      illuminateLEDs
+    ;B       test
 
     ; Hex test
-    BL      display_digit_on_7_seg_setup
-    LDR     r4, =str_hex_display_instr
-    BL      output_string
-    LDR     r4, =prompt
-    BL      output_string
-    LDR     r4, =str_user
-    BL      read_string
-    MOV     r0, #0
-    LDRB    r0, [r4]
-    BL      display_digit_on_7_seg
-    B       test
+    ;BL      display_digit_on_7_seg_setup
+    ;LDR     r4, =str_hex_display_instr
+    ;BL      output_string
+    ;LDR     r4, =str_prompt
+    ;BL      output_string
+    ;LDR     r4, =str_user
+    ;BL      read_string
+    ;MOV     r0, #0
+    ;LDRB    r0, [r4]
+    ;BL      display_digit_on_7_seg
+    ;B       test
 
     ; RGB test
-    BL      Illuminate_RGB_LED_setup
-    LDR     r4, =str_RGB_instr
-    BL      output_string
-    LDR     r4, =str_RGB_options
-    BL      output_string
-    LDR     r4, =str_user
-    BL      read_string
-    BL      atoi
-    BL      Illuminate_RGB_LED
-    B       test
+    ;BL      Illuminate_RGB_LED_setup
+    ;LDR     r4, =str_RGB_instr
+    ;BL      output_string
+    ;LDR     r4, =str_RGB_options
+    ;BL      output_string
+;loop
+    ;LDR     r4, =str_prompt
+    ;BL      output_string
+    ;LDR     r4, =str_user
+    ;BL      read_string
+    ;BL      atoi
+    ;BL      Illuminate_RGB_LED
+    ;B       loop
 
     ; Push Buttons test
-    BL      read_from_push_btns_setup
-    LDR     r4, =str_push_btns_instr
-    BL      output_string
-    LDR     r4, =str_push_btns_output
-    BL      read_from_push_btns
-    CMP     r0, #48
-    BLNE    output_string
-    BLNE    output_character
-    BLNE    newline
-    B       test
+    ;BL      read_from_push_btns_setup
+;loop
+    ;BL      read_from_push_btns
+    ;CMP     r0, #48
+    ;BLNE    output_character
+    ;BLNE    newline
+    ;B       loop
 
 
     LDMFD   SP!, {lr}
