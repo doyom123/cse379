@@ -227,9 +227,11 @@ test
     ; Push Buttons test
     ;BL      read_from_push_btns_setup
 ;loop
+    ;LDR     r4, =str_user
     ;BL      read_from_push_btns
+    ;LDR     r0, [r4]
     ;CMP     r0, #48
-    ;BLNE    output_character
+    ;BLNE    output_string
     ;BLNE    newline
     ;B       loop
 

@@ -259,11 +259,11 @@ display_digit_on_7_seg_setup
 
 ; ***************************
 ; Reads the momentary push buttons
-; ARGS  : none
+; ARGS  : r4 = address to store result
 ; RETURN: r0 = value read as char / '0' if no btn_pressed
 ; ***************************
 read_from_push_btns
-    STMFD   SP!, {lr, r1-r3}
+    STMFD   SP!, {lr, r1-r4}
     LDR     r1, =IO1PIN         ; load IO1PIN Base Address
     LDR     r2, [r1]            ; load IO1PIN value 
     
@@ -271,7 +271,9 @@ read_from_push_btns
     MVN     r2, r2              ; take complement 
     LDR     r3, =0xFFFFFFF0
     BIC     r2, r3              ; bit clear everything except LSByte
-    ADD     r2, #48             ; add 48 to convert to char
+    
+    MOV     r0, r2    
+    BL      itoa
     MOV     r0, r2              ; return in r0
 
 ;     MOV     r0, #0
@@ -301,7 +303,7 @@ read_from_push_btns
 
 ;     MOV     r0, #48             ; return '0' if no btn pressed
 ; btns_end     
-    LDMFD   SP!, {lr, r1-r3}
+    LDMFD   SP!, {lr, r1-r4}
     BX lr
 
 read_from_push_btns_setup
@@ -441,6 +443,51 @@ atoi_end
     ADDEQ   r2, r2, #1          ; then add 1
     MOV     r0, r2              ; Return in r0
     LDMFD   SP!, {lr, r2-r4}
+    BX      lr
+
+itoa
+    ; Args r4 = base address to store result string
+    ;      r0 = int to convert
+    ; r1 = divisor 10
+    ; r3 = counter
+    STMFD   SP!, {lr, r1-r4}
+    MOV     r3, #0
+    MOV     r1, #10
+    ; Check sign
+    CMP     r0, #0
+    MOV     r5, #0x2D       ; '-' char
+    STRBMI  r5, [r4], #1    ; if negative, insert '-' char
+    MVNMI   r0, r0          ; if negative, convert to two's comp
+    ADDMI   r0, r0, #1
+    
+    CMP     r0, #0          ; if int == 0, store in memory to write and branch to end
+    BNE     itoa_loop       
+    ADD     r0, r0, #0x30   ; convert 0 to char '0'
+    STRB    r0, [r4], #1    ; store 0 in memory
+    B       itoa_end        ; branch to end
+        
+itoa_loop
+    MOV     r1, #10
+    BL      div_and_mod     ; divide by 10
+
+    CMP     r1, #0          ; if remainder == 0
+    CMPEQ   r0, #0          ; and quotient == 0, branch to end
+    BEQ     itoa_pop
+    ADD     r1, r1, #48     ; Convert int to ASCII
+    PUSH    {r1}            ; Push onto stack
+    ADD     r3, r3, #1      ; Increment Counter
+    B       itoa_loop
+itoa_pop
+    CMP     r3, #0          ; Pop from stack until counter == 0
+    BEQ     itoa_end
+    POP     {r1}
+    STRB    r1, [r4], #1    ; Store popped char into memory
+    SUB     r3, r3, #1
+    B       itoa_pop
+itoa_end
+    MOV     r1, #0          ; append NULL char
+    STRB    r1, [r4]
+    LDMFD   sp!, {lr, r1-r4}
     BX      lr
 
 
