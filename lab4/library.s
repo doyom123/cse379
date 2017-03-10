@@ -61,22 +61,22 @@ RGB_SET
     ALIGN
 
 LED_SET
-        DCD 0x000F0000  ; 0
-        DCD 0x00070000  ; 1
-        DCD 0x000B0000  ; 2
-        DCD 0x00030000  ; 3
-        DCD 0x000D0000  ; 4
-        DCD 0x00050000  ; 5
-        DCD 0x00090000  ; 6
-        DCD 0x00010000  ; 7
-        DCD 0x000E0000  ; 8
-        DCD 0x00060000  ; 9
-        DCD 0x000A0000  ; 10
-        DCD 0x00020000  ; 11
-        DCD 0x000C0000  ; 12
-        DCD 0x00040000  ; 13
-        DCD 0x00080000  ; 14
-        DCD 0x00000000  ; 15
+        DCD 0x00000000  ; 0
+        DCD 0x00080000  ; 1
+        DCD 0x00040000  ; 2
+        DCD 0x000C0000  ; 3
+        DCD 0x00020000  ; 4
+        DCD 0x000A0000  ; 5
+        DCD 0x00060000  ; 6
+        DCD 0x000E0000  ; 7
+        DCD 0x00010000  ; 8
+        DCD 0x00090000  ; 9
+        DCD 0x00050000  ; 10
+        DCD 0x000D0000  ; 11
+        DCD 0x00030000  ; 12
+        DCD 0x000B0000  ; 13
+        DCD 0x00070000  ; 14
+        DCD 0x000F0000  ; 15
         
     ALIGN   
 
@@ -317,21 +317,22 @@ read_from_push_btns_setup
 
 ; ***************************
 ; Illuminates a selected set of LEDs
+; Set to low to light up
 ; ARGS  : r0 = pattern indicating which LEDs to illuminate
 ; RETURN: none
 ; ***************************
 illuminateLEDs
     STMFD   SP!, {lr, r1-r3}
-    LDR     r1, =IO1CLR         ; load IO1CLR Base Address
+    LDR     r1, =IO1SET         ; load IO1SET Base Address
     LDR     r2, =0x000F0000     ; mask for p1.16-p1.19
     STR     r2, [r1]            ; clear LEDs
-    LDR     r1, =IO1SET         ; load IO1SET Base Address
+    LDR     r1, =IO1CLR         ; load IO1CLR Base Address
     MOV     r0, r0, LSL #2      ; increment * 4
     LDR     r3, =LED_SET        
     LDR     r2, [r3, r0]        ; load pattern for LED
     LDR     r3, [r1]            
     ORR     r3, r3, r2          ; ORR with IO1SET value with mask to set
-    STR     r3, [r1]            ; store in IO1SET to display
+    STR     r3, [r1]            ; store in IO1CLR to set low
     LDMFD   SP!, {lr, r1-r3}
     BX      lr
 illuminateLEDs_setup
@@ -359,15 +360,15 @@ illuminateLEDs_setup
 Illuminate_RGB_LED
     STMFD   SP!, {lr, r0-r3}
     ;BL      hex_to_int          ; convert hex char to int
+    ;LDR     r1, =IO0SET         ; load IO0SSET Base Address
+    ;LDR     r2, =0x00260000     ;  
+    ;STR     r2, [r1]            ; set RGB_LED to turn off RGB
     LDR     r1, =IO0CLR         ; load IO0CLR Base Address
-    LDR     r2, =0x00260000     ;  
-    STR     r2, [r1];           ; clear RGB_LED
-    LDR     r1, =IO0SET         ; load IO0SET Base Address
     LDR     r3, =RGB_SET
     MOV     r0, r0, LSL #2      ; increment * 4
     LDR     r2, [r3, r0]        ; Load pattern for digit
-    MVN     r2, r2
-    STR     r2, [r1]            ; store in IO0SET to display  
+    ;MVN     r2, r2
+    STR     r2, [r1]            ; write to IO0CLR to display  
     LDMFD   SP!, {lr, r0-r3}
     BX lr
 
