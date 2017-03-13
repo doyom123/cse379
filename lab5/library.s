@@ -7,7 +7,8 @@
     EXPORT output_character
     EXPORT display_digit_on_7_seg
     EXPORT display_digit_on_7_seg_setup
-    EXPORT read_from_push_btns
+    EXPORT display_digit_on_7_seg_clear
+	EXPORT read_from_push_btns
     EXPORT read_from_push_btns_setup
     EXPORT illuminateLEDs
     EXPORT illuminateLEDs_setup
@@ -16,6 +17,7 @@
     EXPORT newline
     EXPORT str_len
     EXPORT atoi
+	EXPORT RGB_LED
 
 U0BA  EQU 0xE000C000            ; UART0 Base Address
 U0LSR EQU 0x14                  ; UART0 Line Status Register
@@ -49,7 +51,7 @@ digits_SET
         DCD 0x00001F80  ; D
         DCD 0x00003C80  ; E
         DCD 0x00003880  ; F
-    ALIGN
+	ALIGN
 
 RGB_SET
         DCD 0x00020000  ; 0. red
@@ -77,8 +79,26 @@ LED_SET
         DCD 0x000B0000  ; 13
         DCD 0x00070000  ; 14
         DCD 0x000F0000  ; 15
-        
-    ALIGN   
+    ALIGN
+
+PUSH_BUTTON_SET
+        DCD 0x00000000  ; 0
+        DCD 0x00000008  ; 1
+        DCD 0x00000004  ; 2
+        DCD 0x0000000C  ; 3
+        DCD 0x00000002  ; 4
+        DCD 0x0000000A  ; 5
+        DCD 0x00000006  ; 6
+        DCD 0x0000000E  ; 7
+        DCD 0x00000001  ; 8
+        DCD 0x00000009  ; 9
+        DCD 0x00000005  ; 10
+        DCD 0x0000000D  ; 11
+        DCD 0x00000003  ; 12
+        DCD 0x0000000B  ; 13
+        DCD 0x00000007  ; 14
+        DCD 0x0000000F  ; 15
+	ALIGN   
 
 ; ***************************
 ; Initialize UART0
@@ -256,11 +276,17 @@ display_digit_on_7_seg_setup
     LDMFD   SP!, {lr, r1-r3}
     BX      lr
 
-
+display_digit_on_7_seg_clear
+	STMFD 	SP!, {lr}
+	LDR 	r0, =IO0CLR 		; load IO0CLR Base Address
+	LDR 	r2, =0x00003F80 	; mask for p0.7-p0.13
+	STR 	r2, [r0]			; clear display
+	LDMFD 	SP!, {lr}
+	BX 		lr
 ; ***************************
 ; Reads the momentary push buttons
 ; ARGS  : r4 = address to store result
-; RETURN: r0 = value read as char / '0' if no btn_pressed
+; RETURN: r0 = '0' if no btn_pressed
 ; ***************************
 read_from_push_btns
     STMFD   SP!, {lr, r1-r4}
@@ -270,39 +296,20 @@ read_from_push_btns
     LSR     r2, #20             ; right shift places p1.20-p1.23 into LSByte
     MVN     r2, r2              ; take complement 
     LDR     r3, =0xFFFFFFF0
-    BIC     r2, r3              ; bit clear everything except LSByte
-    
-    MOV     r0, r2    
+	BIC     r2, r3              ; bit clear everything except LSByte
+	    
+
+    MOV     r0, r2
+	CMP 	r0, #0
+	BEQ	    btns_end
+	LSL 	r0, #2
+	LDR	 	r3, =PUSH_BUTTON_SET
+	LDR 	r5, [r3,r0]
+	MOV 	r0, r5    
     BL      itoa
-    MOV     r0, r2              ; return in r0
-
-;     MOV     r0, #0
-;     LDR     r3, =0x00E00000     ; btn_1 mask = 0x00100000
-;     AND     r0, r2, r3
-;     CMP     r0, r3              ; if IO1PIN && mask
-;     MOVEQ   r0, #49             ; set return value to '1'
-;     BEQ     btns_end            ; branch to end
-
-;     LDR     r3, =0x00D00000     ; btn_2 mask = 0x00200000
-;     AND     r0, r2, r3
-;     CMP     r0, r3              ; if IO1PIN && mask
-;     MOVEQ   r0, #50             ; set return value to '2'
-;     BEQ     btns_end            ; branch to end
-
-;     LDR     r3, =0x00B00000     ; btn_3 mask = 0x00400000
-;     AND     r0, r2, r3
-;     CMP     r0, r3              ; if IO1PIN && mask
-;     MOVEQ   r0, #51             ; set return value to '3'
-;     BEQ     btns_end            ; branch to end
-
-;     LDR     r3, =0x00700000     ; btn_4 mask = 0x00800000
-;     AND     r0, r2, r3
-;     CMP     r0, r3              ; if IO1PIN && mask
-;     MOVEQ   r0, #52             ; set return value to '4'
-;     BEQ     btns_end            ; branch to end
-
-;     MOV     r0, #48             ; return '0' if no btn pressed
-; btns_end     
+    MOV     r0, r5              ; return in r0
+	BL 		newline
+btns_end
     LDMFD   SP!, {lr, r1-r4}
     BX lr
 
@@ -564,5 +571,69 @@ pin_connect_block_setup_for_uart0
     STR r1, [r0]
     LDMFD SP!, {lr, r0, r1}
     BX lr
+
+RGB_LED
+
+	STMFD SP!,{lr}
+	LDR r1, =0xE002C004	   					; pinsel 1 port 0
+	MOV r4, #0
+	STR r4, [r1]	
+	
+	LDR r1, =0xE0028008			  			; IODIR 
+	LDR r4, =0xFFFFC07F						; select pin for output 		
+	STR r4, [r1]
+	
+	LDR r1, 	=0xE002800C						; IOCLR 
+	LDR r2, =0xE0028004						; IOSET 
+	
+	
+	MOV r4, #-1 							;clear rgb
+	STR r4, [r2]
+
+
+	CMP r0, #0x31							; 1
+	BEQ r_red
+	CMP r0, #0x32							; 2
+	BEQ r_green
+	CMP r0, #0x33							; 3
+	BEQ r_blue
+	CMP r0, #0x34							; 4
+	BEQ r_purple
+	CMP r0, #0x35							; 5
+	BEQ r_yellow
+	CMP r0, #0x36							; 6
+	BEQ r_white
+	
+	B r_wr_in
+	
+r_red		
+	LDR r4, =0x20000 					; illuminate red	
+	B r_end
+r_green
+	LDR r4, =0x200000 					 ; illuminate green
+	B r_end
+r_blue
+	LDR r4, =0x40000 					; illuminate blue
+	B r_end
+r_white
+	LDR r4, =0x260000 				   ; illuminate whhite
+	B r_end	
+r_yellow
+	LDR r4, =0x220000 				   ; illuminate yellow
+	B r_end
+r_purple
+	LDR r4, =0x60000 					 ; illuminate purple
+	B r_end
+
+
+r_end										
+	STR r4, [r1]
+
+r_wr_in
+	BL pin_connect_block_setup_for_uart0    
+    BL uart_init
+	LDMFD sp!, {lr}
+	BX lr
+
 
     END    
