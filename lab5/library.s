@@ -1,3 +1,6 @@
+ ; Do Om / doom
+; Arunan Bala Krishnan / arunanba
+
     AREA    lib, CODE, READWRITE
     EXPORT read_string
     EXPORT output_string
@@ -18,6 +21,11 @@
     EXPORT str_len
     EXPORT atoi
 	EXPORT RGB_LED
+	EXPORT DISPLAY_DIGIT
+	EXPORT READ_STRING
+	EXTERN string
+	EXTERN lab5_exit
+	EXTERN pattern
 
 U0BA  EQU 0xE000C000            ; UART0 Base Address
 U0LSR EQU 0x14                  ; UART0 Line Status Register
@@ -633,6 +641,292 @@ r_wr_in
 	BL pin_connect_block_setup_for_uart0    
     BL uart_init
 	LDMFD sp!, {lr}
+	BX lr
+
+
+
+DISPLAY_DIGIT							;BEGIN DISPLAY DIGIT
+	STMFD SP!,{r0-r12, lr}
+;redo	BL READ_STRING			  		
+		;LDR r3, =string					; Loads string
+		;LDRB r0, [r3]
+							
+		CMP r0, #0x2B				   	; COMPARE with +
+		BEQ plus						; Branch if equals to plus
+		CMP r0, #0x2D					; Compare with -
+		BEQ minus						; Branch if equals to minus
+		CMP r0, #0x30					; Compare with ZERO
+		BEQ zero						; Branch to zero
+		CMP r0, #0x51					; Compare with Q
+		BEQ off							; Branch to quit
+				
+		B STP						   	
+				
+
+plus	LDR r5, =0xE0028000				
+		LDR r6, [r5]					; Loads contents of r5 into r6
+		MOV r7, #0xFFFFC07F  			; Copies 0xFFFFC07F into r7  
+		BIC r6, r6, r7					
+				
+		CMP r6, #0x00001F80				; Compares r6 with zero
+		BEQ one							; If equal then branch to one
+
+		CMP r6, #0x00000300				; Compares r6 with one
+		BEQ two							; If equal then branch to two
+
+		CMP r6, #0x00002D80				; Compares r6 with two
+		BEQ three						; If equal then branch to three
+
+		CMP r6, #0x00002780				; Compares r6 with three
+		BEQ four						; If equal then branch to four
+
+		CMP r6, #0x00003300				; Compares r6 with four
+		BEQ five						; If equal then branch to five
+
+		CMP r6, #0x00003680				; Compares r6 with five
+		BEQ six							; If equal then branch to six
+
+		CMP r6, #0x00003E80				; Compares r6 with six
+		BEQ seven						; If equal then branch to seven
+
+		CMP r6, #0x00001380				; Compares r6 with seven
+		BEQ eight						; If equal then branch to eight
+
+		CMP r6, #0x00003F80				; Compares r6 with eight
+		BEQ nine						; If equal then branch to nine
+
+		CMP r6, #0x00003780				; Compares r6 with nine
+		BEQ zero						; If equal then branch to zero
+																   
+	
+
+minus	LDR r5, =0xE0028000				
+		LDR r6, [r5]					; Loads contents of r5 into r6
+		MOV r7, #0xFFFFC07F  			; Copies 0xFFFFC07F into r7  
+		BIC r6, r6, r7					
+		
+
+		CMP r6, #0x00003780				; Compares r6 with nine
+		BEQ eight						; If equal then branch to eight
+
+		CMP r6, #0x00003F80				; Compares r6 with eight
+		BEQ seven						; If equal then branch to seven
+		
+		CMP r6, #0x00001380				; Compares r6 with seven
+		BEQ six							; If equal then branch to six
+
+		CMP r6, #0x00003E80				; Compares r6 with six
+		BEQ five						; If equal then branch to five
+		
+		CMP r6, #0x00003680				; Compares r6 with five
+		BEQ four						; If equal then branch to four
+
+		CMP r6, #0x00003300				; Compares r6 with four
+		BEQ three						; If equal then branch to three
+
+		CMP r6, #0x00002780				; Compares r6 with three
+		BEQ two							; If equal then branch to two
+
+		CMP r6, #0x00002D80				; Compares r6 with two
+		BEQ one							; If equal then branch to one
+
+		CMP r6, #0x00001800				; Compares r6 with one
+		BEQ zero						; If equal then branch to zero
+
+		CMP r6, #0x00001F80				; Compares r6 with zero
+		BEQ nine						; If equal then branch to nine
+				
+zero	LDR r3, =0xE002800C				 ; IOCLR turns off all LED
+		MOV r12, #0x3F80				 ; Copies #0x3F80 into r12
+		STR r12, [r3]					 ; Stores #0x3F80 into r3
+
+		LDR r4, =0xE0028004				 
+		MOV r2, #0x00001F80				 ; Copies 0x1F80 to r2	  
+		STR r2, [r4]					 ; Stores contents of r2 into r4
+		
+		MOV r0, #0x30
+		LDR r1, =pattern
+		STR r0, [r1]
+		
+		B STP							 ; Branch to STP
+
+one	   	LDR r3, =0xE002800C				 
+		MOV r12, #0x3F80				 ; Copies #0x3F80 into r12
+		STR r12, [r3]					 ; Stores #0x3F80 into r3
+
+		LDR r4, =0xE0028004				 
+		MOV r2, #0x00000300				 ; Copies 0x0300 to r2
+		STR r2, [r4]					 ; Stores contents of r2 into r4
+		
+		MOV r0, #0x31
+		LDR r1, =pattern
+		STR r0, [r1]
+		B STP							 ; Branch to STP
+
+		
+
+two		LDR r3, =0xE002800C				 
+		MOV r12, #0x3F80				 ; Copies #0x3F80 into r12
+		STR r12, [r3]					 ; Stores #0x3F80 into r3
+
+		LDR r4, =0xE0028004				 
+		MOV r2, #0x00002D80				 ; Copies 0x2D80 to r2
+		STR r2, [r4]					 ; Stores contents of r2 into r4
+	    
+		LDR r1, =pattern
+		STR r2, [r1]
+		
+		MOV r0, #0x32
+		LDR r1, =pattern
+		STR r0, [r1]
+		B STP 							 ; Branch to STP
+
+
+three	LDR r3, =0xE002800C				 
+		MOV r12, #0x3F80				 ; Copies #0x3F80 into r12
+		STR r12, [r3]					 ; Stores #0x3F80 into r3
+
+		LDR r4, =0xE0028004				 
+		MOV r2, #0x00002780				 ; Copies 0x2780 to r2
+		STR r2, [r4]					 ; Stores contents of r2 into r4
+		
+		LDR r1, =pattern
+		STR r2, [r1]
+
+		MOV r0, #0x33
+		LDR r1, =pattern
+		STR r0, [r1]
+		B STP							 ; Branch to STP
+	
+			
+four	LDR r3, =0xE002800C				 
+		MOV r12, #0x3F80				 ; Copies #0x3F80 into r12
+		STR r12, [r3]					 ; Stores #0x3F80 into r13
+
+		LDR r4, =0xE0028004				
+		MOV r2, #0x00003300				 ; Copies 0x3300 to r2
+		STR r2, [r4]					 ; Stores contents of r2 into r4
+
+		MOV r0, #0x34
+		LDR r1, =pattern
+		STR r0, [r1]
+	 	B STP							 ; Branch to STP
+	
+
+five	LDR r3, =0xE002800C				 
+		MOV r12, #0x3F80				 ; Copies #0x3F80 into r12
+		STR r12, [r3]					 ; Stores #0x3F80 into r3
+
+		LDR r4, =0xE0028004				 
+		MOV r2, #0x00003680				 ; Copies 0x3680 to r2
+		STR r2, [r4]					 ; Stores contents of r2 into r4
+		
+		MOV r0, #0x35
+		LDR r1, =pattern
+		STR r0, [r1]
+		B STP							 ; Branch to STP
+
+
+six		LDR r3, =0xE002800C				 
+		MOV r12, #0x3F80				 ; Copies #0x3F80 into r12
+		STR r12, [r3]					 ; Stores #0x3F80 into r3
+
+		LDR r4, =0xE0028004				 
+		MOV r2, #0x00003E80				 ; Copies 0x3E80 to r2
+		STR r2, [r4]					 ; Stores contents of r2 into r4
+	
+		MOV r0, #0x36
+		LDR r1, =pattern
+		STR r0, [r1]
+		B STP							 ; Branch to STP
+
+			
+seven	LDR r3, =0xE002800C				 
+		MOV r12, #0x3F80				 ; Copies #0x3F80 into r12
+		STR r12, [r3]					 ; Stores #0x3F80 into r3
+
+		LDR r4, =0xE0028004				 
+		MOV r2, #0x00001380				 ; Copies 0x1380 to r2
+		STR r2, [r4]					 ; Stores contents of r2 into r4
+	
+		MOV r0, #0x37
+		LDR r1, =pattern
+		STR r0, [r1]
+		B STP							 ; Branch to STP
+	
+
+eight	LDR r3, =0xE002800C				 
+		MOV r12, #0x3F80				 ; Copies #0x3F80 into r12
+		STR r12, [r3]					 ; Stores #0x3F80 into r3
+
+		LDR r4, =0xE0028004				 
+		MOV r2, #0x00003F80				 ; Copies 0x3F80 to r2
+		STR r2, [r4]					 ; Stores contents of r2 into r4
+	 
+		MOV r0, #0x38
+		LDR r1, =pattern
+		STR r0, [r1]
+	 	B STP 							 ; Branch to STP
+	 
+			
+nine	LDR r3, =0xE002800C				 
+		MOV r12, #0x3F80				 ; Copies #0x3F80 into r12
+		STR r12, [r3]					 ; Stores #0x3F80 into r3
+
+		LDR r4, =0xE0028004				
+		MOV r2, #0x00003780				 ; Copies 0x3780 to r2
+		STR r2, [r4]					 ; Stores contents of r2 into r4
+	 	
+		MOV r0, #0x39
+		LDR r1, =pattern
+		STR r0, [r1]
+		B STP							 ; Branch to STP
+
+off		LDR r3, =0xE002800C				 ; IOCLR turns off all LED
+		MOV r12, #0x3F80				 ; Copies #0x3F80 into r12
+		STR r12, [r3]					 ; Stores #0x3F80 into r3
+		MOV r0, #1
+	    B lab5_exit
+
+STP	LDMFD SP!, {r0-r12,lr}		
+	BX LR
+
+READ_STRING
+
+	STMFD r13!, {r1-r12, r14}
+
+		LDR r1, =string		 		
+		MOV r2, r1					
+
+
+res_loop	LDR r4, =0xE000C014			; Load r4 with Line Status Register
+		LDRB r3, [r4]				; Load content of r4 to r3
+		AND r3, r3, #1				
+		CMP r3, #0					; Comparing r3 to 0
+		BEQ res_loop					; If r3 equals to 0, then branch to loop		   
+		LDR r5, =0xE000C000			; If r3 equals to 1, then continue and load r5 with address of Receive Register
+		LDRB r0, [r5]				; Load content of r5 to r0
+
+
+		STRB r0, [r1]				; If not equal, continue. Store contents of r0 into memory address of r1
+		ADD r1, r1, #1				; Increments r1 contents by 1
+		BL OUTPUT_CHARACTER			; Branches to OUTPUT_CHARACTER
+
+	LDMFD r13!, {r1-r12, r14}
+	BX lr
+
+OUTPUT_CHARACTER
+	STMFD r13!, {r1-r12, r14}		 ; start OUTPUT_CHARACTER
+	
+tloop	LDR r1, =0xE000C014			 ; Load r1 with Line Status Register
+		LDRB r3, [r1]				 ; Load content of r1 to r3
+		AND r3, #0x20				 
+		CMP r3, #0					 ; Comparing r3 to 0
+		BEQ tloop					 ; If r3 equals  to 0, then branch to tloop
+		LDR r4, =0xE000C000			 
+		STRB r0, [r4]				 ; Stores content of r0 to r4
+	
+	LDMFD r13!, {r1-r12, r14}		 ; Register r0 is saved
 	BX lr
 
 
