@@ -12,14 +12,12 @@
 	EXTERN pin_connect_block_setup_for_uart0
 	EXTERN newline
 	EXTERN DISPLAY_DIGIT
-	EXPORT string
 	EXPORT lab6_exit
 	EXPORT pattern
 
-str_user = "*@#X"
+str_user = "*@#X", 0
 
 str_exit = "goodbye", 0							   
-
     ALIGN
 
 status DCD 0x00000000
@@ -31,32 +29,44 @@ pattern DCD 0x30
 
 lab6	 	
 	STMFD sp!, {lr} 	
-
+    LDR r4, =str_user
+    BL output_string
+    BL timer0_init
 	BL interrupt_init 	; initialize UART0 and button interrupts
-
+	
 lab6_loop
 	
-	B lab5_loop
+	B lab6_loop
 lab6_exit
 	
 	LDR r4, =str_exit
 	BL output_string
 	LDMFD sp!,{lr}
-	BX lr
+	BX lr 
 
 timer0_init
 	STMFD SP!, {r4-r5, lr}
-	LDR r4, =0xE0004000 	; Timer0InterruptRegister
-	AND r4, r4, #8  	 	; bit 4 to enable interrupt
-	
-	LDR r4, =0xFFFFF00c 	; InterruptSelectRegister
-	AND r4, r4, #8 			; set bit 4 to classify as FIQ
+    ;LDR r4, =0xFFFFF00C 	; InterruptSelectRegister
+	;LDR r5, [r4]
+    ;ORR r5, r5, #8 			; set bit 4 to classify T0 as FIQ
+							; set bit 5 to classify T1 as FIQ
+	;STR r5, [r4]
 
-	LDR r4, =0xE0004014 	; Timer0MatchControlRegister
-	AND r4, r4, #3 			; Interrupt and Reset on MR0
+    ;LDR r4, =0xFFFFF010 	; VIC Interrupt Enable register
+    ;LDR r5, [r4]
+	;ORR r5, r5, #8  	 	; bit 4 to enable Timer0Interrupt
+							; bit 5 to enable Timer1Interrupt
+	;STR r5, [r4]
+        
+    ;LDR r4, =0xE0004014 	; T0MCR - Timer0MatchControlRegister
+	;LDR r5, [r4]
+    ;ORR r5, r5, #0x18 		; Interrupt and Reset for MR1
+    ;STR r5, [r4]
 
-	LDR r4, =0xE0004018 	; Timer0MatchRegister
-	
+	; Enable Timer
+	LDR r4, =0xE000401C 	; Match Register 0
+	LDR r5, =0xDEADBEEF		; Set time to match time
+	STR r5, [r4]
 
 	LDMFD SP!, {r4-r5, lr}
 	BX lr
@@ -82,6 +92,7 @@ interrupt_init
 	LDR r1, [r0, #0xC]
 	ORR r1, r1, #0x8000 ; External Interrupt 1
 	ORR r1, r1, #0x40 	; UART0 Interrupt
+    ORR r1, r1, #0x8    ; TIMER 0
 	STR r1, [r0, #0xC]
 
 	; Enable Interrupts
@@ -89,6 +100,7 @@ interrupt_init
 	LDR r1, [r0, #0x10] 
 	ORR r1, r1, #0x8000 ; External Interrupt 1
 	ORR r1, r1, #0x40	; UART0 Interrupt
+    ORR r1, r1, #0x8    ; TIMER 0
 	STR r1, [r0, #0x10]
 
 	; External Interrupt 1 setup for edge sensitive
@@ -109,6 +121,20 @@ interrupt_init
 
 FIQ_Handler
 	STMFD SP!, {r0-r12, lr}   ; Save registers 
+Timer0Int ; Check for Timer 0 Interrupt
+	LDR r0, =0xE0004000  	; T0InterruptRegister
+	LDR r1, [r1]
+	TST r1, #2 	;  1 if pending interrupt due to Match Register 1
+	BNE UART0
+
+	LDR r4, =str_user
+	BL output_string
+
+	LDR r0, =0xE0004000 	; Clear interrupt for MR1
+	LDR r1, [r0]			; by writing 1 to bit 2
+	ORR r1, #2
+	STR r1, [r0]
+	BEQ FIQ_Exit
 
 UART0	; Check for UART0 interrupt
 	LDR r0, =0xE000C008  ; UART0 Interrupt Identification Register(U0IIR)
@@ -117,30 +143,9 @@ UART0	; Check for UART0 interrupt
 	BNE EINT1
 	
 	STMFD SP!, {r0-r12, lr}
-	BL read_character
-	BL output_character
-	MOV r6, r0
-	; Check status, if display 0 then exit
-	LDR r0, =str_status
-	LDR r4, [r0]
-	BIC r4, r4, #0xFFFFFF00
-	CMP r4, #0x30
-	BEQ UART0_end
-		
-
-	MOV r0, r6
-	;LDR	r1, =string
-	;STRB r0, [r1]
-	;LDR r3, =string
-	BL DISPLAY_DIGIT	
-
-	;BL output_character
-	;BL newline
-
 	
-
-
-UART0_end	
+	BL read_character
+	
 	LDMFD SP!, {r0-r12, lr}
 	B FIQ_Exit
 
@@ -152,32 +157,8 @@ EINT1	; Check for EINT1 interrupt
 																
 	STMFD SP!, {r0-r12, lr}   ; Save registers 
 	
-	LDR 	r0, =str_status
-	LDRB 	r6, [r0]
-	CMP 	r6, #0x30 ; if display on, turn off
-	BNE 	display_off
-	MOV 	r6, #0x31 ; set status to '1' / on
-	STRB	r6, [r0]
+
 	
-	LDR 	r0, =pattern
-	LDRB 	r7, [r0]
-	MOV 	r0, r7
-	BL	 	display_digit_on_7_seg	; turn on display
-	;BL		enable_uart0_interrupt	; turn on UART0 interrupt
-	LDR 	r4, =str_instr
-	BL 		output_string	
-	B	 	display_on
-display_off	
-	LDR 	r0, =str_status
-	MOV 	r1, #0x30 	; set status to '0' / off
-	STRB 	r1, [r0]
-	BL 	display_digit_on_7_seg_clear ; turn off display
-	;BL	disable_uart0_interrupt ; turn off UART0 interrupt
-			
-	;ldr r0, =prompt
-	;ldr r1, =0x01234567
-	;str r1, [r0]
-display_on	
 	LDMFD SP!, {r0-r12, lr}   ; Restore registers
 		
 	ORR r1, r1, #2		; Clear Interrupt
