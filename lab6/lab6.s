@@ -27,6 +27,7 @@ str_pos = "\033[08;08f", 0
 str_pause = "PAUSED", 0
 str_exit = "bye", 0
 str_instructions = "Press a key to start", 0
+hide_cursor = "\033[?25l", 0
     ALIGN
 score DCD 0
     ALIGN
@@ -60,6 +61,7 @@ pos
     ALIGN
         
 TCR EQU 0xE0004008 	; Timer 0 Counter Register
+MR1 EQU 0xE000401C  ; Match Register 1
     ALIGN
         
 lab6	 	
@@ -73,36 +75,70 @@ lab6_start_loop
     LDR r0, =start
     LDR r1, [r0]
     CMP r1, #0
-    BEQ lab6_start_loop
+    BEQ lab6_start_loop     ; if key not pressed then loop
 
     ; get initial random position
-    MOV r0, #12     ; get random num in range of 13
+    MOV r0, #12     ; get random num in range of 12
     BL rng
     LDR r1, =y_pos
     ADD r0, r0, #3  ; add 3 to compensate for borders
     STR r0, [r1]    ; store in y_pos
-    MOV r0, #13     ; get random num in range of 13
+    MOV r0, #12     ; get random num in range of 12
     BL rng
     ADD r0, r0, #2  ; add 2 to compensate for borders
     LDR r1, =x_pos  ; store in x_pos
     STR r0, [r1]
     
     ; get random user character
-    MOV r0, #4
-    BL rng
-    LDR r1, =str_users
+    MOV r0, #4      ; set range
+    BL rng          ; get random num
+    LDR r1, =str_users 
     LDR r2, =str_user
-    LDRB r3, [r1, r0]
-    STRB r3, [r2]
+    LDRB r3, [r1, r0]   ; index to random user char using random num
+    STRB r3, [r2]       ; store random user char
     
     ; get initial random direction
-    ;MOV r0, #4
-    ;BL rng
-    ;CMP r0 #0
-    ;BNE
-    
-    ;B lab6_loop
-    
+    MOV r0, #4
+    BL rng
+    CMP r0, #0
+    BNE rand_dir1
+    LDR r4, =vel_down
+    MOV r5, #1
+    STR r5, [r4]
+    LDR r4, =vel_right
+    MOV r5, #0
+    STR r5, [r4]
+    B lab6_loop
+rand_dir1
+    CMP r0, #1
+    BNE rand_dir2
+    LDR r4, =vel_down
+    MOV r5, #-1
+    STR r5, [r4]
+    LDR r4, =vel_right
+    MOV r5, #0
+    STR r5, [r4]
+    B lab6_loop
+rand_dir2
+    CMP r0, #2
+    LDR r4, =vel_down
+    MOV r5, #0
+    STR r5, [r4]
+    LDR r4, =vel_right
+    MOV r5, #1
+    STR r5, [r4]
+    BNE rand_dir3
+    B lab6_loop
+rand_dir3
+    LDR r4, =vel_down
+    MOV r5, #0
+    STR r5, [r4]
+    LDR r4, =vel_right
+    MOV r5, #-1
+    STR r5, [r4]   
+ 
+    LDR r4, =hide_cursor
+    BL output_string
 lab6_loop
 	B lab6_loop
 lab6_exit
@@ -148,7 +184,7 @@ interrupt_init
 
 	; Set match register
 	LDR r4, =0xE000401C 	; Match Register 1
-	LDR r5, =0x000FF000		; Set time to match time
+	LDR r5, =0x000F0000		; Set time to match time
 	STR r5, [r4]
 
 	; Enable Timer0
@@ -388,14 +424,28 @@ UART0_q
 UART0_plus
     CMP r0, #0x2B
     BNE UART0_minus
-   
+    ; reset counter before halving
+    LDR r5, =0xE0004004     ; T0TCR - TimerControlRegister
+    LDR r6, [r5]            ; writing to bit 1 for reset
+    MOV r7, #2
+    ORR r6, r6, r7
+    STR r6, [r5]            ; clear bit 1 to clear reset
+    BIC r6, #2
+    STR r6, [r5]
+    
+    LDR r4, =MR1            ; halve MR1
+    LDR r5, [r4]
+    LSR r5, r5, #1
+    STR r5, [r4]
+       
     B UART0_Exit
 UART0_minus
     CMP r0, #0x2D
     BNE UART0_Exit
-   
-    B UART0_Exit    
-
+    LDR r4, =MR1
+    LDR r5, [r4]
+    LSL r5, r5, #1          ; double MR1 time
+    STR r5, [r4]
 UART0_Exit
 	LDMFD SP!, {r0-r12, lr}
 	B FIQ_Exit
@@ -408,8 +458,52 @@ EINT1	; Check for EINT1 interrupt
 																
 	STMFD SP!, {r0-r12, lr}   ; Save registers 
 	
-	;LDR r4, =str_user
-	;BL	output_string
+    ; set position to 8x8
+    LDR r4, =y_pos
+    MOV r5, #0x8
+    STR r5, [r4]
+    LDR r4, =x_pos
+    STR r5, [r4]
+    
+    ; set random direction
+    MOV r0, #4
+    BL rng
+    CMP r0, #0
+    BNE rand_dir11
+    LDR r4, =vel_down
+    MOV r5, #1
+    STR r5, [r4]
+    LDR r4, =vel_right
+    MOV r5, #0
+    STR r5, [r4]
+    B lab6_loop
+rand_dir11
+    CMP r0, #1
+    BNE rand_dir22
+    LDR r4, =vel_down
+    MOV r5, #-1
+    STR r5, [r4]
+    LDR r4, =vel_right
+    MOV r5, #0
+    STR r5, [r4]
+    B lab6_loop
+rand_dir22
+    CMP r0, #2
+    LDR r4, =vel_down
+    MOV r5, #0
+    STR r5, [r4]
+    LDR r4, =vel_right
+    MOV r5, #1
+    STR r5, [r4]
+    BNE rand_dir33
+    B lab6_loop
+rand_dir33
+    LDR r4, =vel_down
+    MOV r5, #0
+    STR r5, [r4]
+    LDR r4, =vel_right
+    MOV r5, #-1
+    STR r5, [r4]  
 	
 	LDMFD SP!, {r0-r12, lr}   ; Restore registers
 		
