@@ -1,4 +1,4 @@
-; Do Om / doom
+ ; Do Om / doom
 ; Arunan Bala Krishnan / arunanba
 
     AREA    lib, CODE, READWRITE
@@ -8,6 +8,7 @@
     EXPORT pin_connect_block_setup_for_uart0
     EXPORT read_character
     EXPORT output_character
+    EXPORT div_and_mod
     EXPORT display_digit_on_7_seg
     EXPORT display_digit_on_7_seg_setup
     EXPORT display_digit_on_7_seg_clear
@@ -20,9 +21,11 @@
     EXPORT newline
     EXPORT str_len
     EXPORT atoi
+    EXPORT itoa
+	EXPORT rng
+	EXTERN t0addr
+    EXTERN TCR
 
-	
-	EXTERN pattern
 
 U0BA  EQU 0xE000C000            ; UART0 Base Address
 U0LSR EQU 0x14                  ; UART0 Line Status Register
@@ -119,7 +122,8 @@ uart_init
     LDR     r4, =0xE000C00C
     STR     r1, [r4]
     ; Set lower divisor latch for 9,600 baud
-    MOV     r1, #120
+	; for 115200 set 10
+    MOV     r1, #10
     LDR     r4, =0xE000C000
     STR     r1, [r4]
     ; Set upper divisor latch for 9,600 baud
@@ -566,6 +570,23 @@ loop
     LDMFD r13!, {r2-r12, r14}
     BX lr      ; Return to the C program    
 
+; ***************************
+; Return random number 0-3
+; ARGS  : r0 - range
+; RETURN: r0 - random number
+; ***************************
+rng
+	STMFD SP!, {r1-r2, r5 , lr}
+    MOV r2, r0
+    LDR r1, =TCR
+    LDR r0, [r1]
+    LDR r5, =0xFFFF
+    AND r0, r0, r5
+    MOV r1, r2
+    BL div_and_mod
+    MOV r0, r1
+	LDMFD SP!, {r1-r2, r5, lr}
+	BX lr
 
 pin_connect_block_setup_for_uart0
     STMFD SP!, {lr, r0, r1}
@@ -576,6 +597,7 @@ pin_connect_block_setup_for_uart0
     STR r1, [r0]
     LDMFD SP!, {lr, r0, r1}
     BX lr
+
 
 
     END    
